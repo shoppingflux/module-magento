@@ -1,0 +1,1 @@
+# Shopping-Feed Magento Module
