@@ -1,0 +1,16 @@
+<?php 
+$this->setPriceDataObject($this->getSource());
+$feesShoppingFlux = (float)$this->getSource()->getFeesShoppingflux();
+if(!$feesShoppingFlux) {
+    $feesShoppingFlux = (float)$this->getSource()->getOrder()->getFeesShoppingflux();
+}
+?>
+
+<?php if (true||$feesShoppingFlux): ?>
+    <tr class="shoppingflux">
+        <td class="label a-right" <?php echo $this->getColspan()?'colspan="'.$this->getColspan().'"':''?>><?php echo Mage::helper('profileolabs_shoppingflux')->formatFeesDescription($feesShoppingFlux, $this->getSource()->getOrder()->getMarketplaceShoppingflux()) ?></td>
+        <td class="a-right">
+            <?php echo $this->displayPrices($feesShoppingFlux, $feesShoppingFlux); ?>
+        </td>
+    </tr>
+<?php endif; ?>

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <!--<checkout_onepage_success>
+        <reference name="before_body_end">
+            <block type="profileolabs_shoppingflux/tracking_roi" name="sf_tracking_roi" as="sf.track.roi" />
+        </reference>
+    </checkout_onepage_success>
+    <default>
+        <reference name="before_body_end">
+            <block type="profileolabs_shoppingflux/tracking_buyline" name="sf_tracking_buyline" as="sf.track.buyline" />
+        </reference>
+    </default>-->
+</layout>

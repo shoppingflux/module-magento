@@ -1,0 +1,53 @@
+<?php 
+$storeCode = Mage::app()->getRequest()->getParam('store', false);
+if($storeCode):
+$store = Mage::app()->getStore($storeCode);
+$email = Mage::getStoreConfig('trans_email/ident_general/email', $store->getId());
+$feed = urlencode(Mage::helper('profileolabs_shoppingflux')->getFeedUrl($store));
+$lang = mb_substr(Mage::getStoreConfig('general/locale/code', $store->getId()), -2);
+$token = Mage::getStoreConfig('shoppingflux/configuration/api_key', $store->getId());
+?>
+<div style="text-align:center;">
+    <img src="<?php echo $this->getSkinUrl('images/shoppingflux/logo_us.jpg') ?>" height="55" width="246" /> 
+</div>
+
+<div class="shoppingflux-register entry-edit">
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo $this->__('Shopping Flux') ?></h4>
+    </div>
+    <div class="fieldset fieldset-wide">
+       
+        <div style="text-align:center;">
+            <button class="scalable add"  onclick="window.location='https://register.shopping-feed.com/sign/magento?email=<?php echo $email ?>&feed=<?php echo $feed ?>&lang=<?php echo $lang ?>&token=<?php echo $token ?>'; return false;"><span><?php echo $this->__('Register Now') ?></span></button>
+            <br/>
+        </div>
+        
+         <img src="<?php echo $this->getSkinUrl('images/shoppingflux/ad.png') ?>" height="625" width="625" style="float:right;" /> 
+
+        
+        <h2>Shopping Feed exports your products to the largest marketplaces in the world, all from a single intuitive platform. Through our free setup and expert support, we help thousands of storefronts increase their sales and visibility.</h2>
+        <br/>
+        <ul>
+            <li><strong>Put your feeds to work:</strong> A single platform to manage your products and sales on the world's marketplaces.</li>
+            <li><strong>Set it and forget it:</strong> Automated order processes for each marketplace channel you sell on, quadrupling your revenue, and not your workload.</li>
+            <li><strong>Try Before You Buy:</strong> Expert Channel Setup is always free on Shopping Feed, giving you risk-free access to your brand new channel before becoming a member.</li>
+        </ul>
+        <br/>
+        <ul>
+            <li>Optimize your channels, and calculate realtime Return On Investment for all the leading comparison shopping engines like <strong>Google Shopping, Ratuken, shopping.com, NextTag, ShopZilla</strong>, and more.</li>
+            <li>Connect your storefront to all the major marketplaces like <strong>eBay, Amazon, Sears</strong> and <strong>11 Main</strong>, while managing your pricing, inventory, and merchandising through a single, intuitive platform.</li>
+            <li>Prepare for an evolving ecosystem: New features, tools, and integrations are being created every month, at no extra cost.</li>
+            <li>Be seen: With over 50 different marketplaces and shopping engines under one roof, Shopping Feed helps you find your right audience.</li>
+        </ul>
+
+        <br/><br/>
+        <p><strong style="font-size:1.5em;">With over 1400 Members worldwide, helping them achieve over $13 Million in monthly revenue, Lets us help you put your feeds to work.</strong></p>
+        <div style="text-align:center;clear:both;">
+            <button class="scalable add"  onclick="window.location='https://register.shopping-feed.com/sign/magento?email=<?php echo $email ?>&feed=<?php echo $feed ?>&lang=<?php echo $lang ?>&token=<?php echo $token ?>'; return false;"><span><?php echo $this->__('Register Now') ?></span></button>
+            <br/>
+        </div>
+    </div>
+</div>
+<?php else: ?>
+    Please select a store view.
+<?php endif; ?>

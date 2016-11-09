@@ -1,0 +1,22 @@
+<div class="content-header">
+<table cellspacing="0">
+    <tr>
+        <td style="width:50%;"><h3 class="icon-head head-products"><?php echo Mage::helper('profileolabs_shoppingflux')->__('Feed list') ?></h3></td>
+        <td class="a-right">
+            <?php echo $this->getButtonsHtml() ?>
+        </td>
+    </tr>
+</table>
+</div>
+<div>
+    <dl>
+    <?php foreach(Mage::app()->getStores() as $store): ?>
+        <?php if($this->storeHasFeed($store)): ?>
+            <?php $_storeId = $store->getId() ?>
+            <?php $_feedUrl = $this->getFeedUrl($store); ?>
+            <dt><?php echo $_storeId ?> - <?php echo $store->getName() ?></dt>
+            <dd><a href="<?php echo $_feedUrl ?>" target="_blank"><?php echo $_feedUrl ?></a></dd>
+        <?php endif; ?>
+    <?php endforeach ?>
+    </dl>
+</div>

@@ -1,0 +1,77 @@
+<?php
+/**
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magentocommerce.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magentocommerce.com for more information.
+ *
+ * @category    design
+ * @package     default_default
+ * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ */
+?>
+
+<script type="text/javascript">
+//<![CDATA[
+  
+<?php if(($block = $this->getLayout()->getBlock('shoppingflux.product.grid')) && ($_gridJsObject=$block->getJsObjectName())): ?>
+    if($('shoppingflux_in_category_products')) {
+        var shoppingfluxCategoryProducts = $H(<?php echo $this->getProductsJson() ?>);
+        $('shoppingflux_in_category_products').value = shoppingfluxCategoryProducts.toQueryString();
+
+        function shoppingfluxRegisterCategoryProduct(grid, element, checked){
+
+            if(checked){
+                shoppingfluxCategoryProducts.set(element.value, 1);  
+            }
+            else{
+                shoppingfluxCategoryProducts.unset(element.value);
+            }
+            $('shoppingflux_in_category_products').value = shoppingfluxCategoryProducts.toQueryString();
+            grid.reloadParams = {'sf_selected_products[]':shoppingfluxCategoryProducts.keys()};
+        }
+
+
+        function shoppingfluxCategoryProductRowClick(grid, event){
+            var trElement = Event.findElement(event, 'tr');
+            var isInput   = Event.element(event).tagName == 'INPUT';
+            if(trElement){
+                var checkbox = Element.getElementsBySelector(trElement, 'input');
+                if(checkbox[0]){
+                    var checked = isInput ? checkbox[0].checked : !checkbox[0].checked;
+                    <?php echo $_gridJsObject ?>.setCheckboxChecked(checkbox[0], checked);
+                }
+            }
+        }
+
+
+        function shoppingfluxCategoryProductRowInit(grid, row){
+            //var checkbox = $(row).getElementsByClassName('checkbox')[0];
+
+        }
+
+
+        <?php echo $_gridJsObject ?>.rowClickCallback = shoppingfluxCategoryProductRowClick;
+        <?php echo $_gridJsObject ?>.initRowCallback = shoppingfluxCategoryProductRowInit;
+        <?php echo $_gridJsObject ?>.checkboxCheckCallback = shoppingfluxRegisterCategoryProduct;
+        <?php echo $_gridJsObject ?>.rows.each(function(row){shoppingfluxCategoryProductRowInit(<?php echo $_gridJsObject ?>, row)});
+     }
+
+        
+<?php endif; ?>
+//]]>
+</script>

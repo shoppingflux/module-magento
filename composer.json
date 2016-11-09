@@ -1,0 +1,6 @@
+{
+  "name": "shoppingfeed/module-magento",
+  "require-dev": {
+    "magento/core": "1.9.*"
+  }
+}
