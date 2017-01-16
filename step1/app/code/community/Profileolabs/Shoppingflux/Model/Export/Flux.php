@@ -478,7 +478,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
 
         //Varien_Profiler::stop("SF::Flux::getAdditionalAttributes");
         //Varien_Profiler::start("SF::Flux::addEntry1");
-        if (!isset($data['shipping_delay']) && empty($data['shipping_delay']))
+        if (!isset($data['shipping_delay']) || empty($data['shipping_delay']))
             $data['shipping_delay'] = $this->getConfig()->getConfigData('shoppingflux_export/general/default_shipping_delay');
 
 
