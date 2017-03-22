@@ -148,9 +148,12 @@ class Profileolabs_Shoppingflux_Model_Export_Observer {
         $category = $observer->getEvent()->getCategory();
         $request = $observer->getEvent()->getRequest();
         $postedProducts = $request->getParam('shoppingflux_category_products');
-        $products = array();
         $storeId = intval($request->getParam('store', 0));
-        parse_str($postedProducts, $products);
+        
+        /** @var Profileolabs_Shoppingflux_Helper_String $stringHelper */
+        $stringHelper = Mage::helper('profileolabs_shoppingflux/string');
+        $products = $stringHelper->parseQueryStr($postedProducts);
+        
         if (isset($products['on']))
             unset($products['on']);
         $products = array_keys($products);
