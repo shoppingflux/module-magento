@@ -159,3 +159,5 @@
 "Send notification to ShoppingFeed","Envoyer à ShoppingFlux"
 "<strong>Shopping Feed is installed!</strong> <b>Attention : </b><a href=""%s"">Click here to finish account setup.</a>","<strong>Shopping Flux est installé!</strong> <b>Attention : </b><a href=""%s"">Cliquez ici pour finaliser la configuration du compte.</a>"
 "Do not export this category in ShoppingFlux","Ne pas exporter cette categorie dans ShoppingFlux"
+"Export all images","Exporter toutes les images"
+"Exported image count","Nombre d'images à exporter"
