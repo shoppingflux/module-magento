@@ -11,6 +11,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
     protected $_attributesFromConfig = array();
     protected $_attributesConfigurable = array();
     protected $_storeCategories = array();
+    protected $_excludedNotSalableProductsIds = array();
 
     protected function _construct() {
         $this->_init('profileolabs_shoppingflux/export_flux');
@@ -71,6 +72,9 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
         return $product;
     }
 
+    /**
+     * @return Profileolabs_Shoppingflux_Model_Config
+     */
     public function getConfig() {
         return Mage::getSingleton('profileolabs_shoppingflux/config');
     }
@@ -173,6 +177,32 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
         }
     }
 
+    /**
+     * @param int $storeId
+     * @return int[]
+     */
+    protected function _getExcludedNotSalableProductsIds($storeId)
+    {
+        if (!isset($this->_excludedNotSalableProductsIds[$storeId])) {
+            if ($seconds = $this->getConfig()->getNotSalableRetentionDuration($storeId)) {
+                $resource = $this->getResource();
+                $connection = $resource->getReadConnection();
+
+                $this->_excludedNotSalableProductsIds[$storeId] = $connection->fetchCol(
+                    $connection->select()
+                        ->from(
+                            $resource->getTable('profileolabs_shoppingflux/not_salable_product'),
+                            array('product_id')
+                        )
+                        ->where('UNIX_TIMESTAMP(not_salable_from) <= ?', time() - $seconds)
+                );
+            } else {
+                $this->_excludedNotSalableProductsIds[$storeId] = array();
+            }
+        }
+        return $this->_excludedNotSalableProductsIds[$storeId];
+    }
+
     public function productNeedUpdateForStore($productId, $storeId, $ignoreRelations = false) {
         $product = $this->_getProduct($productId, $storeId);
         if ($product && $product->getId()) {
@@ -220,8 +250,14 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
             return false;
         }
 
-        if (!$this->getConfig()->isExportNotSalable() && !$product->isSalable()) {
-            return false;
+        $exportNotSalable = $this->getConfig()->isExportNotSalable();
+        $retainNotSalable = $this->getConfig()->isNotSalableRetentionEnabled();
+
+        if (!$product->isSalable()) {
+            if ((!$exportNotSalable && !$retainNotSalable)
+                || ($retainNotSalable && in_array($product->getId(), $this->_getExcludedNotSalableProductsIds($storeId)))) {
+                return false;
+            }
         }
 
         if ($product->getTypeId() == 'simple') {

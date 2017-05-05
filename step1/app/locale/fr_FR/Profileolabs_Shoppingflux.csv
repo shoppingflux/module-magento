@@ -159,3 +159,7 @@
 "Send notification to ShoppingFeed","Envoyer à ShoppingFlux"
 "<strong>Shopping Feed is installed!</strong> <b>Attention : </b><a href=""%s"">Click here to finish account setup.</a>","<strong>Shopping Flux est installé!</strong> <b>Attention : </b><a href=""%s"">Cliquez ici pour finaliser la configuration du compte.</a>"
 "Do not export this category in ShoppingFlux","Ne pas exporter cette categorie dans ShoppingFlux"
+"Enable temporary retention of out of stock/not salable products","Activer la rétention temporaire des produits épuisés/non vendables"
+"Temporary retention duration","Durée de la rétention temporaire"
+"Experimental feature.","Fonctionnalité expérimentale."
+"In hours. Maximum duration: 168 hours (1 week).","En heures. Durée maximum : 168 heures (1 semaine)."
