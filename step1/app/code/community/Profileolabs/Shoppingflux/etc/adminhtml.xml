@@ -81,9 +81,33 @@
                         <children>
                             <manageorders translate="title" module="profileolabs_shoppingflux">
                                 <title>Orders</title>
+                                <children>
+                                    <order translate="title" module="profileolabs_shoppingflux">
+                                        <title>ShoppingFlux orders</title>
+                                        <sort_order>10</sort_order>
+                                    </order>
+                                    <import translate="title" module="profileolabs_shoppingflux">
+                                        <title>ShoppingFlux order import</title>
+                                        <sort_order>20</sort_order>
+                                    </import>
+                                    <log translate="title" module="profileolabs_shoppingflux">
+                                        <title>ShoppingFlux order log</title>
+                                        <sort_order>30</sort_order>
+                                    </log>
+                                </children>
                             </manageorders>
                             <export>
                                 <title>Export</title>
+                                <children>
+                                    <show_flux translate="title" module="profileolabs_shoppingflux">
+                                        <title>Feed List</title>
+                                        <sort_order>10</sort_order>
+                                    </show_flux>
+                                    <set_product translate="title" module="profileolabs_shoppingflux">
+                                        <title>Product Selection</title>
+                                        <sort_order>20</sort_order>
+                                    </set_product>
+                                </children>
                             </export>
                         </children>
                     </shoppingflux>

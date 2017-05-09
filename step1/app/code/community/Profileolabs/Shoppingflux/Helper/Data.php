@@ -107,12 +107,13 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract {
         $shipping = Mage::getModel('shipping/shipping');
         $methodModel = $shipping->getCarrierByCode($carrierCode);
         if ($methodModel) {
-            $result = $methodModel->collectRates($this->getRequest($product, $countryCode = "FR"));
-            if ($result->getError()) {
-                Mage::logException(new Exception($result->getError()));
-            } else {
-                foreach ($result->getAllRates() as $rate) {
-                    return $rate->getPrice();
+            if (is_object($result = $methodModel->collectRates($this->getRequest($product, $countryCode = "FR")))) {
+                if ($result->getError()) {
+                    Mage::logException(new Exception($result->getError()));
+                } else {
+                    foreach ($result->getAllRates() as $rate) {
+                        return $rate->getPrice();
+                    }
                 }
             }
         }

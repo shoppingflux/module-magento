@@ -514,7 +514,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
 
         //Varien_Profiler::stop("SF::Flux::getAdditionalAttributes");
         //Varien_Profiler::start("SF::Flux::addEntry1");
-        if (!isset($data['shipping_delay']) && empty($data['shipping_delay']))
+        if (!isset($data['shipping_delay']) || empty($data['shipping_delay']))
             $data['shipping_delay'] = $this->getConfig()->getConfigData('shoppingflux_export/general/default_shipping_delay');
 
 
@@ -845,8 +845,8 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
 
 
         $mediaUrl = Mage::getBaseUrl('media') . 'catalog/product';
-
         $i = 1;
+        $count = $this->getConfig()->getExportedImageCount();
 
         if ($product->getImage() != "" && $product->getImage() != 'no_selection') {
             $data["image-url-" . $i] = $mediaUrl . $product->getImage();
@@ -869,21 +869,14 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
 
                 $data["image-url-" . $i] = $product->getMediaConfig()->getMediaUrl($image['file']);
                 $data["image-label-" . $i] = $image['label'];
-                $i++;
-                if (($i - 6) == 0)
+                
+                if (($count !== false) && ($i++ >= $count)) {
                     break;
+                }
             }
         }
 
-
-        //Complet with empty nodes
-        for ($j = $i; $j < 6; $j++) {
-            $data["image-url-" . $i] = "";
-            $data["image-label-" . $i] = "";
-            $i++;
-        }
-        
-        if(!$data['image-url-1'] && $checkParentIfNone) {
+        if ((!isset($data['image-url-1']) || !$data['image-url-1']) && $checkParentIfNone) {
             $groupedParentsIds = Mage::getResourceSingleton('catalog/product_link')
                    ->getParentIdsByChild($product->getId(), Mage_Catalog_Model_Product_Link::LINK_TYPE_GROUPED);
             $parentId = current($groupedParentsIds);

@@ -439,7 +439,7 @@
         </shoppingflux>
         <shoppingflux_mo>
             <manageorders>
-                <enabled>0</enabled>
+                <enabled>1</enabled>
                 <limit_orders>30</limit_orders>
                 <new_order_status>pending</new_order_status>
                 <create_invoice>1</create_invoice>

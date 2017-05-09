@@ -8,7 +8,7 @@
  */
 
 
-if(file_exists(BP.'/app/code/community/MDN/AdvancedStock/Model/CatalogInventory/Stock/Item.php') || file_exists(BP.'/app/code/local/MDN/AdvancedStock/Model/CatalogInventory/Stock/Item.php')) {
+if (Mage::helper('core')->isModuleEnabled('MDN_AdvancedStock') && class_exists('MDN_AdvancedStock_Model_CatalogInventory_Stock_Item')) {
     class Profileolabs_Shoppingflux_Model_Export_Rewrite_CatalogInventory_Stock_Item_Compatibility extends MDN_AdvancedStock_Model_CatalogInventory_Stock_Item {}
 } else {
     class Profileolabs_Shoppingflux_Model_Export_Rewrite_CatalogInventory_Stock_Item_Compatibility extends Mage_CatalogInventory_Model_Stock_Item {}
