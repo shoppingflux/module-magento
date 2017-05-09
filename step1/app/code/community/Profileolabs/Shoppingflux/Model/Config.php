@@ -227,6 +227,12 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object {
     public function useManageStock($storeId = null) {
         return $this->getConfigFlag('shoppingflux_export/general/use_manage_stock', $storeId);
     }
+    
+    public function getExportedImageCount($storeId = null) {
+        $exportAll = $this->getConfigFlag('shoppingflux_export/general/export_all_images', $storeId);
+        $count = (int) $this->getConfigData('shoppingflux_export/general/exported_image_count', $storeId);
+        return (!$exportAll && ($count > 0) ? $count : false);
+    }
 
     /** ORDERS * */
     public function isOrdersEnabled($storeId = null) {
