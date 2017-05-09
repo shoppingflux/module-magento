@@ -1,6 +1,15 @@
 <?php
 
 class Profileolabs_Shoppingflux_Model_Manageorders_Observer {
+    /**
+     * @var array
+     */
+    protected $_trackingUrlCallbacks = array(
+        'owebia' => '_extractOwebiaTrackingUrl',
+        'dpdfrclassic' => '_extractDpdTrackingUrl',
+        'dpdfrpredict' => '_extractDpdTrackingUrl',
+        'dpdfrrelais' => '_extractDpdTrackingUrl',
+    );
 
     public function setCustomerTaxClassId($observer) {
         if (!$this->getConfig()->applyTax() && Mage::registry('is_shoppingfeed_import')/*Mage::getSingleton('checkout/session')->getIsShoppingFlux()*/) {
@@ -20,26 +29,70 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer {
         return $this;
     }
 
+    /**
+     * @param Varien_Object $trackingInfo
+     * @return string
+     */
+    protected function _extractOwebiaTrackingUrl(Varien_Object $trackingInfo)
+    {
+        return preg_match('%href="(.*?)"%i', $trackingInfo->getStatus(), $matches)
+            ? $matches[1]
+            : '';
+    }
+
+    /**
+     * @param Varien_Object $trackingInfo
+     * @return string
+     */
+    protected function _extractDpdTrackingUrl(Varien_Object $trackingInfo)
+    {
+        return preg_match('%iframe src="(.*?)"%i', $trackingInfo->getStatus(), $matches)
+            ? $matches[1]
+            : '';
+    }
+
+    /**
+     * @param Mage_Sales_Model_Order_Shipment_Track $shipmentTrack
+     * @return string
+     */
+    protected function _getShipmentTrackingUrl($shipmentTrack)
+    {
+        $trackingUrl = '';
+
+        if (preg_match('%^(owebia|(dpdfr)(classic|predict|relais))%i', $shipmentTrack->getCarrierCode(), $matches)
+            && isset($this->_trackingUrlCallbacks[$matches[1]])
+        ) {
+            /** @var Mage_Shipping_Model_Config $shippingConfig */
+            $shippingConfig = Mage::getSingleton('shipping/config');
+            $carrierInstance = $shippingConfig->getCarrierInstance($shipmentTrack->getCarrierCode());
+
+            if ($carrierInstance
+                && ($trackingInfo = $carrierInstance->getTrackingInfo($shipmentTrack->getData('number')))
+                && ($trackingInfo instanceof Varien_Object)
+            ) {
+                $trackingUrl = call_user_func(array($this, $this->_trackingUrlCallbacks[$matches[1]]), $trackingInfo);
+            }
+        }
+
+        return $trackingUrl;
+    }
+
     public function getShipmentTrackingNumber($shipment) {
         $result = false;
         $tracks = $shipment->getAllTracks();
-        $trackUrl = '';
+
         if (is_array($tracks) && !empty($tracks)) {
             $firstTrack = array_shift($tracks);
-            if($firstTrack) {
-                $carrierInstance = Mage::getSingleton('shipping/config')->getCarrierInstance($firstTrack->getCarrierCode());
-                if ($carrierInstance) {
-                    $trackingInfo = $carrierInstance->getTrackingInfo($firstTrack->getData('number'));
-                    $status = $trackingInfo->getStatus();
-                    if (preg_match('%href="(.*)"%i', $status, $regs)) {
-                        $trackUrl = $regs[1];
-                    }
-                }
-            }
+
             if (trim($firstTrack->getData('number'))) {
-                $result = array('trackUrl' => $trackUrl, 'trackId' => $firstTrack->getData('number'), 'trackTitle' => $firstTrack->getData('title'));
+                $result = array(
+                    'trackUrl' => $this->_getShipmentTrackingUrl($firstTrack),
+                    'trackId' => $firstTrack->getData('number'),
+                    'trackTitle' => $firstTrack->getData('title'),
+                );
             }
         }
+
         $dataObj = new Varien_Object(array('result' => $result, 'shipment'=>$shipment));
         Mage::dispatchEvent('shoppingflux_get_shipment_tracking', array('data_obj' => $dataObj));
         $result = $dataObj->getResult();
