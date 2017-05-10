@@ -485,6 +485,7 @@
                 <export_soldout>1</export_soldout>
                 <export_not_salable>1</export_not_salable>
                 <export_visibility>2,3,4</export_visibility>
+                <export_all_images>1</export_all_images>
                 <enable_cron>0</enable_cron>
                 <memory_limit>2048</memory_limit>
                 <use_manage_stock>1</use_manage_stock>
