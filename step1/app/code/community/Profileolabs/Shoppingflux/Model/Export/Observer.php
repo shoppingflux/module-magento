@@ -8,6 +8,9 @@
  */
 class Profileolabs_Shoppingflux_Model_Export_Observer {
 
+    /**
+     * @return Profileolabs_Shoppingflux_Model_Config
+     */
     public function getConfig() {
         return Mage::getSingleton('profileolabs_shoppingflux/config');
     }
@@ -78,11 +81,12 @@ class Profileolabs_Shoppingflux_Model_Export_Observer {
         $collection->addFieldToFilter('store_id', $storeId);
         $sizeTotal = $collection->count();
         $collection->clear();
+        $withNotSalableRetention = $this->getConfig()->isNotSalableRetentionEnabled($storeId);
 
-        if (!$this->getConfig()->isExportNotSalable($storeId)) {
+        if (!$this->getConfig()->isExportNotSalable($storeId) && !$withNotSalableRetention) {
             $collection->addFieldToFilter('salable', 1);
         }
-        if (!$this->getConfig()->isExportSoldout($storeId)) {
+        if (!$this->getConfig()->isExportSoldout($storeId) && !$withNotSalableRetention) {
             $collection->addFieldToFilter('is_in_stock', 1);
         }
         if ($this->getConfig()->isExportFilteredByAttribute($storeId)) {
@@ -442,6 +446,270 @@ class Profileolabs_Shoppingflux_Model_Export_Observer {
             $this->_scheduleProductUpdates($productId, array('stock_value' => 0));
         }
     }
-    
 
+    /**
+     * @param int $storeId
+     * @param string $stockAlias
+     * @return Zend_Db_Select
+     */
+    protected function _getSalableProductsSelect($storeId, $stockAlias)
+    {
+        /** @var Mage_Catalog_Model_Resource_Product $productResource */
+        $productResource = Mage::getResourceModel('catalog/product');
+
+        /** @var Mage_Catalog_Model_Resource_Product_Collection $collection */
+        $collection = Mage::getResourceModel('catalog/product_collection');
+        $collection->addStoreFilter($storeId);
+        $collection->addAttributeToFilter('status', Mage_Catalog_Model_Product_Status::STATUS_ENABLED);
+
+        $collection->joinTable(
+            array($stockAlias => $productResource->getTable('cataloginventory/stock_item')),
+            'product_id=entity_id',
+            array('product_id')
+        );
+
+        $select = $collection->getSelect();
+
+        if (Mage::getStoreConfigFlag('cataloginventory/item_options/manage_stock')) {
+            $select->where(
+                '(' . $stockAlias . '.use_config_manage_stock = 0 AND ' . $stockAlias . '.manage_stock = 0)'
+                . ' OR '
+                . $stockAlias . '.is_in_stock = 1'
+            );
+        } else {
+            $select->where(
+                $stockAlias . '.use_config_manage_stock = 1'
+                . ' OR '
+                . $stockAlias . '.manage_stock = 0'
+                . ' OR '
+                . $stockAlias . '.is_in_stock = 1'
+            );
+        }
+
+        return $select;
+    }
+
+    /**
+     * @param int $storeId
+     */
+    protected function _refreshNotSalableProducts($storeId)
+    {
+        /** @var Mage_Catalog_Model_Resource_Product $productResource */
+        $productResource = Mage::getResourceModel('catalog/product');
+        $readConnection = $productResource->getReadConnection();
+        $writeConnection = $productResource->getWriteConnection();
+
+        $salableGlobalSelect = $this->_getSalableProductsSelect($storeId, '_ciss');
+        $typeConditions = array();
+
+        // Specific conditions for configurable products
+
+        $inStockChildrenSelect = $this->_getSalableProductsSelect($storeId, '_cciss');
+
+        $inStockChildrenSelect->reset(Varien_Db_Select::COLUMNS)
+            ->columns(array('count' => new Zend_Db_Expr('COUNT(*)')))
+            ->joinInner(
+                array('_ccsl' => $productResource->getTable('catalog/product_super_link')),
+                '_ccsl.product_id = e.entity_id',
+                array()
+            )
+            ->where('_ccsl.parent_id = e.entity_id');
+
+        $typeConditions[] = '('
+            . $readConnection->quoteInto('(e.type_id != ?)', Mage_Catalog_Model_Product_Type::TYPE_CONFIGURABLE)
+            . ' OR '
+            . '(' . $inStockChildrenSelect->assemble() . ' > 0)'
+            . ')';
+
+        // Global select finalization
+
+        $salableGlobalSelect->reset(Varien_Db_Select::COLUMNS)
+            ->columns(array('e.entity_id'))
+            ->where(implode(' OR ', $typeConditions));
+
+        $notSalableGlobalSelect = $readConnection->select()
+            ->from(
+                array('_main_table' => $productResource->getTable('catalog/product')),
+                array(
+                    'product_id' => '_main_table.entity_id',
+                    'store_id' => new Zend_Db_Expr($storeId),
+                    'not_salable_from' => new Zend_Db_Expr($writeConnection->quote(now())),
+                )
+            )
+            ->where('_main_table.entity_id NOT IN (' . $salableGlobalSelect->assemble() . ')');
+
+        $nowTime = time();
+        $writeConnection->beginTransaction();
+
+        try {
+            // Retrieve products that were already updated in the flux
+
+            $updatedIds = $readConnection->fetchCol(
+                $readConnection->select()
+                    ->from(
+                        $productResource->getTable('profileolabs_shoppingflux/updated_not_salable_product'),
+                        array('product_id')
+                    )
+                    ->where('store_id = ?', $storeId)
+            );
+
+            // Remember new not salable products
+
+            $writeConnection->query(
+                $notSalableGlobalSelect->insertIgnoreFromSelect(
+                    $productResource->getTable('profileolabs_shoppingflux/not_salable_product'),
+                    array('product_id', 'store_id', 'not_salable_from')
+                )
+            );
+
+            // Forget products that are salable again
+
+            $writeConnection->delete(
+                $productResource->getTable('profileolabs_shoppingflux/not_salable_product'),
+                'product_id IN (' . $salableGlobalSelect->assemble() . ')'
+                . ' AND ' . $writeConnection->quoteInto('store_id = ?', $storeId)
+            );
+
+            if ($seconds = $this->getConfig()->getNotSalableRetentionDuration($storeId)) {
+                // Retrieve products that are updatable, no matter if they have already been,
+                // because they have been not salable long enough
+
+                $updatableSelect = $readConnection->select()
+                    ->from(
+                        $productResource->getTable('profileolabs_shoppingflux/not_salable_product'),
+                        array('product_id', 'store_id')
+                    )
+                    ->where('store_id = ?', $storeId)
+                    ->where('UNIX_TIMESTAMP(not_salable_from) <= ?', $nowTime - $seconds);
+
+                $updatableIds = $readConnection->fetchCol($updatableSelect);
+
+                // Remember the products that will soon be updated in the flux
+
+                $writeConnection->query(
+                    $updatableSelect->insertFromSelect(
+                        $productResource->getTable('profileolabs_shoppingflux/updated_not_salable_product'),
+                        array('product_id', 'store_id')
+                    )
+                );
+            } else {
+                $updatableIds = array();
+            }
+
+            // Reset the products that had exceeded delay, but do not anymore because of a change in the configuration
+
+            $resettableIdsSelect = $readConnection->select()
+                ->from(
+                    $productResource->getTable('profileolabs_shoppingflux/not_salable_product'),
+                    array('product_id')
+                )
+                ->where('store_id = ?', $storeId);
+
+            if ($seconds) {
+                $resettableIdsSelect->where('UNIX_TIMESTAMP(not_salable_from) >= ?', $nowTime - $seconds);
+            }
+
+            $writeConnection->delete(
+                $productResource->getTable('profileolabs_shoppingflux/updated_not_salable_product'),
+                'product_id IN (' . $resettableIdsSelect->assemble() . ')'
+                . ' AND ' . $writeConnection->quoteInto('store_id = ?', $storeId)
+            );
+
+            // Ensure that will be updated products that were updated because they had exceeded not salable delay,
+            // but that either are now salable again, either now have a delay shorter than the newly configured one, ..
+
+            $fluxUpdatableIds = array_diff($updatedIds, $updatableIds);
+
+            // .. and new not salable products
+
+            $fluxUpdatableIds = array_unique(
+                array_merge(
+                    $fluxUpdatableIds,
+                    array_diff($updatableIds, $updatedIds)
+                )
+            );
+
+            /*
+             * Example:
+             * $updatedIds   = [1, 2, 3, 4] - IDs that had previously exceeded not salable delay
+             * $updatableIds = [3, 4, 5, 6] - IDs that currently exceed not salable delay
+             * 
+             * First diff  = [1, 2] => products that are salable again, or do not exceed delay anymore
+             * Second diff = [5, 6] => products that were not exceeding delay, but now do
+             * Remaining   = [3, 4] => products that have not changed since last time
+             **/
+
+            // Mark the necessary flux products as updatable
+
+            $sliceSize = 500;
+
+            $productsSkus = $readConnection->fetchPairs(
+                $readConnection->select()
+                    ->from(
+                        $productResource->getTable('catalog/product'),
+                        array('entity_id', 'sku')
+                    )
+            );
+
+            $sliceCount = ceil(count($fluxUpdatableIds) / $sliceSize);
+
+            for ($i = 0; $i < $sliceCount; $i++) {
+                $productsIds = array_slice($fluxUpdatableIds, $i * $sliceSize, $sliceSize);
+                $updatedSkus = array();
+
+                foreach ($productsIds as $productId) {
+                    if (isset($productsSkus[$productId])) {
+                        $updatedSkus[] = $productsSkus[$productId];
+                    }
+                }
+
+                $writeConnection->update(
+                    $productResource->getTable('profileolabs_shoppingflux/export_flux'),
+                    array('update_needed' => 1),
+                    $writeConnection->quoteInto('sku IN (?)', $updatedSkus)
+                    . ' AND ' . $writeConnection->quoteInto('store_id = ?', $storeId)
+                );
+            }
+
+            $writeConnection->commit();
+
+            /** @var Mage_Core_Model_Config $mageConfig */
+            $mageConfig = Mage::getSingleton('core/config');
+
+            $mageConfig->saveConfig(
+                'shoppingflux_export/not_salable_retention/last_refresh',
+                time(),
+                'stores',
+                $storeId
+            );
+        } catch (Exception $e) {
+            $writeConnection->rollback();
+        }
+    }
+
+    public function refreshNotSalableProducts()
+    {
+        /** @var Mage_Core_Model_Config $mageConfig */
+        $config = $this->getConfig();
+        $storeLastRefreshes = array();
+
+        /** @var Mage_Core_Model_Store $store */
+        foreach (Mage::app()->getStores(false) as $store) {
+            $storeId = $store->getId();
+
+            if ($config->isExportEnabled($storeId) && $config->isNotSalableRetentionEnabled($storeId)) {
+                $storeLastRefreshes[$store->getId()] = (int) Mage::getStoreConfig(
+                    'shoppingflux_export/not_salable_retention/last_refresh',
+                    $storeId
+                );
+            }
+        }
+
+        if (!empty($storeLastRefreshes)) {
+            asort($storeLastRefreshes, SORT_NUMERIC);
+            reset($storeLastRefreshes);
+            $storeId = key($storeLastRefreshes);
+            $this->_refreshNotSalableProducts($storeId);
+        }
+    }
 }

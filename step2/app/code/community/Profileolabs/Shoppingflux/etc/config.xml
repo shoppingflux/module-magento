@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Profileolabs_Shoppingflux>
-            <version>1.0.3</version>
+            <version>1.1.0</version>
         </Profileolabs_Shoppingflux>
     </modules>
     <admin>
@@ -87,6 +87,12 @@
                     <manageorders_export_shipments>
                         <table>shoppingflux_manageorders_export_shipments</table>
                     </manageorders_export_shipments>
+                    <not_salable_product>
+                        <table>shoppingflux_not_salable_product</table>
+                    </not_salable_product>
+                    <updated_not_salable_product>
+                        <table>shoppingflux_updated_not_salable_product</table>
+                    </updated_not_salable_product>
                 </entities>
             </profileolabs_shoppingflux_mysql4>
             <catalog>
@@ -409,6 +415,14 @@
                     <model>profileolabs_shoppingflux/export_observer::manageUpdates</model>
                 </run>
             </export_updates_shoppingflux>-->
+            <shoppingflux_refresh_not_salable_products>
+                <schedule>
+                    <cron_expr>*/10 * * * *</cron_expr>
+                </schedule>
+                <run>
+                    <model>profileolabs_shoppingflux/export_observer::refreshNotSalableProducts</model>
+                </run>
+            </shoppingflux_refresh_not_salable_products>
         </jobs>
     </crontab>
     <default>
