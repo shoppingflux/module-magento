@@ -869,8 +869,9 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
 
                 $data["image-url-" . $i] = $product->getMediaConfig()->getMediaUrl($image['file']);
                 $data["image-label-" . $i] = $image['label'];
+                $i++;
                 
-                if (($count !== false) && ($i++ >= $count)) {
+                if (($count !== false) && ($i >= $count)) {
                     break;
                 }
             }
