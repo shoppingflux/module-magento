@@ -1,0 +1,5 @@
+<?php
+
+class Profileolabs_Shoppingflux_Model_Export_Rewrite_Catalog_Config_Compatibility extends Mage_Catalog_Model_Config
+{
+}

@@ -24,54 +24,44 @@
  * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
-
 <script type="text/javascript">
 //<![CDATA[
-  
-<?php if(($block = $this->getLayout()->getBlock('shoppingflux.product.grid')) && ($_gridJsObject=$block->getJsObjectName())): ?>
+<?php if (($_block = $this->getLayout()->getBlock('shoppingflux.product.grid')) && ($_gridJsObject = $_block->getJsObjectName())): ?>
     if($('shoppingflux_in_category_products')) {
         var shoppingfluxCategoryProducts = $H(<?php echo $this->getProductsJson() ?>);
         $('shoppingflux_in_category_products').value = shoppingfluxCategoryProducts.toQueryString();
 
-        function shoppingfluxRegisterCategoryProduct(grid, element, checked){
-
-            if(checked){
+        function shoppingfluxRegisterCategoryProduct(grid, element, checked) {
+            if (checked) {
                 shoppingfluxCategoryProducts.set(element.value, 1);  
-            }
-            else{
+            } else {
                 shoppingfluxCategoryProducts.unset(element.value);
             }
             $('shoppingflux_in_category_products').value = shoppingfluxCategoryProducts.toQueryString();
             grid.reloadParams = {'sf_selected_products[]':shoppingfluxCategoryProducts.keys()};
         }
 
-
-        function shoppingfluxCategoryProductRowClick(grid, event){
+        function shoppingfluxCategoryProductRowClick(grid, event) {
             var trElement = Event.findElement(event, 'tr');
-            var isInput   = Event.element(event).tagName == 'INPUT';
-            if(trElement){
+            var isInput = Event.element(event).tagName == 'INPUT';
+            
+            if(trElement) {
                 var checkbox = Element.getElementsBySelector(trElement, 'input');
-                if(checkbox[0]){
+                
+                if (checkbox[0]) {
                     var checked = isInput ? checkbox[0].checked : !checkbox[0].checked;
                     <?php echo $_gridJsObject ?>.setCheckboxChecked(checkbox[0], checked);
                 }
             }
         }
 
-
-        function shoppingfluxCategoryProductRowInit(grid, row){
-            //var checkbox = $(row).getElementsByClassName('checkbox')[0];
-
-        }
-
+        function shoppingfluxCategoryProductRowInit(grid, row) {}
 
         <?php echo $_gridJsObject ?>.rowClickCallback = shoppingfluxCategoryProductRowClick;
         <?php echo $_gridJsObject ?>.initRowCallback = shoppingfluxCategoryProductRowInit;
         <?php echo $_gridJsObject ?>.checkboxCheckCallback = shoppingfluxRegisterCategoryProduct;
         <?php echo $_gridJsObject ?>.rows.each(function(row){shoppingfluxCategoryProductRowInit(<?php echo $_gridJsObject ?>, row)});
      }
-
-        
 <?php endif; ?>
 //]]>
 </script>

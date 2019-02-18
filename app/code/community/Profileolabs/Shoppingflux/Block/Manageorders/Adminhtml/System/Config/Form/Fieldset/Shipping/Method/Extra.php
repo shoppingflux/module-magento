@@ -1,98 +1,103 @@
 <?php
 
-class Profileolabs_Shoppingflux_Block_Manageorders_Adminhtml_System_Config_Form_Fieldset_Shipping_Method_Extra extends Profileolabs_Shoppingflux_Block_Adminhtml_System_Config_Form_Fieldset_Abstract {
-
-    public function render(Varien_Data_Form_Element_Abstract $element) {
-        if(!$this->shouldRenderUnregistered()) {
+class Profileolabs_Shoppingflux_Block_Manageorders_Adminhtml_System_Config_Form_Fieldset_Shipping_Method_Extra extends Profileolabs_Shoppingflux_Block_Adminhtml_System_Config_Form_Fieldset_Abstract
+{
+    public function render(Varien_Data_Form_Element_Abstract $element)
+    {
+        if ($this->shouldRenderUnregistered()) {
             return parent::render($element);
         }
-        
+
         $html = $this->_getHeaderHtml($element);
-        
-        $collection = Mage::getModel('profileolabs_shoppingflux/manageorders_shipping_method')->getCollection();
-        
-        if($collection->count()<=0) {
-            $this->_addEmptyField($element);
-        }
-        
+
+        /** @var Profileolabs_Shoppingflux_Model_Mysql4_Manageorders_Shipping_Method_Collection $collection */
+        $collection = Mage::getResourceModel('profileolabs_shoppingflux/manageorders_shipping_method_collection');
         $i = 1;
-        foreach($collection as $shippingMethod) {
-            $this->_addShippingMethodField($element, $shippingMethod->getFullShippingMethodCode(), 10*$i++);
+
+        foreach ($collection as $shippingMethod) {
+            $this->_addShippingMethodField($element, $shippingMethod->getFullShippingMethodCode(), 10 * $i++);
         }
 
+        if ($i === 1) {
+            $this->_addEmptyField($element);
+        }
 
         foreach ($element->getSortedElements() as $field) {
             $html .= $field->toHtml();
         }
 
         $html .= $this->_getFooterHtml($element);
-
         return $html;
     }
 
-    protected function _getHeaderHtml($element) {
-        $html = parent::_getHeaderHtml($element);
-        return $html;
-    }
+    /**
+     * @param Varien_Data_Form_Element_Abstract $fieldset
+     * @param string $shippingMethod
+     * @param int $sortOrder
+     */
+    protected function _addShippingMethodField(Varien_Data_Form_Element_Abstract $fieldset, $shippingMethod, $sortOrder)
+    {
+        /** @var Profileolabs_Shoppingflux_Helper_Data $helper */
+        $helper = Mage::helper('profileolabs_shoppingflux');
 
-    protected function _getFieldRenderer() {
-        if (empty($this->_fieldRenderer)) {
-            $this->_fieldRenderer = Mage::getBlockSingleton('adminhtml/system_config_form_field');
-        }
-        return $this->_fieldRenderer;
-    }
-
-    protected function _getDummyElement() {
-        if (empty($this->_dummyElement)) {
-            $this->_dummyElement = new Varien_Object(array('show_in_default' => 1, 'show_in_website' => 1, 'show_in_store' => 0));
-        }
-        return $this->_dummyElement;
-    }
-    
-    protected function _getNiceName($index) {
-        return ucwords(str_replace('_', ' ', $index));
-    }
-
-
-    protected function _addShippingMethodField($fieldset, $shippingMethod, $sortOrder) {
         $shippingMethod = preg_replace('%[^a-zA-Z0-9_]%', '', $shippingMethod);
+        $configPath = 'shoppingflux_mo/advanced_shipping_method/' . $shippingMethod;
         $configData = $this->getConfigData();
-        $path = 'shoppingflux_mo/advanced_shipping_method/' . $shippingMethod;
-        $data = '';
-        $inherit = false;
-        if (isset($configData[$path])) {
-            $data = $configData[$path];
-            $inherit = false;
-        } else {
-            if($this->getForm()->getConfigRoot()) {
-                $data = (string) $this->getForm()->getConfigRoot()->descend($path);
-                $inherit = true;
-            }
+        $fieldValue = '';
+        $isInheriting = false;
+
+        if (isset($configData[$configPath])) {
+            $fieldValue = $configData[$configPath];
+            $isInheriting = false;
+        } elseif ($this->getForm()->getConfigRoot()) {
+            $fieldValue = (string) $this->getForm()->getConfigRoot()->descend($configPath);
+            $isInheriting = true;
         }
-        $e = $this->_getDummyElement();
-        $fieldset->addField($shippingMethod, 'select', array(
-                    'name' => 'groups[advanced_shipping_method][fields][' . $shippingMethod . '][value]',
-                    'label' => Mage::helper('profileolabs_shoppingflux')->__('Shipping Method for %s', $this->_getNiceName($shippingMethod)),
-                    'value' => $data,
-                    'values' => Mage::getSingleton('adminhtml/system_config_source_shipping_allmethods')->toOptionArray(),
-                    'sort_order' => $sortOrder,
-                    'inherit' => $inherit,
-                    'can_use_default_value' => $this->getForm()->canUseDefaultValue($e),
-                    'can_use_website_value' => $this->getForm()->canUseWebsiteValue($e),
-                ))->setRenderer($this->_getFieldRenderer());
 
+        /** @var Mage_Adminhtml_Model_System_Config_Source_Shipping_Allmethods $methodSource */
+        $methodSource = Mage::getSingleton('adminhtml/system_config_source_shipping_allmethods');
+
+        /** @var Mage_Adminhtml_Block_System_Config_Form $form */
+        $form = $this->getData('form');
+
+        $field = $fieldset->addField(
+            $shippingMethod,
+            'select',
+            array(
+                'name' => 'groups[advanced_shipping_method][fields][' . $shippingMethod . '][value]',
+                'label' => $helper->__('Shipping Method for %s', ucwords(str_replace('_', ' ', $shippingMethod))),
+                'value' => $fieldValue,
+                'values' => $methodSource->toOptionArray(),
+                'sort_order' => $sortOrder,
+                'inherit' => $isInheriting,
+                'scope' => $form->getScope(),
+                'scope_id' => $form->getScopeId(),
+                'scope_label' => $form->getScopeLabel($this->_getDummyElement()),
+                'can_use_default_value' => 0,
+                'can_use_website_value' => 0,
+            )
+        );
+
+        $field->setRenderer($this->_getFieldRenderer());
     }
 
+    /**
+     * @param Varien_Data_Form_Element_Abstract $fieldset
+     */
+    protected function _addEmptyField(Varien_Data_Form_Element_Abstract $fieldset)
+    {
+        /** @var Profileolabs_Shoppingflux_Helper_Data $helper */
+        $helper = Mage::helper('profileolabs_shoppingflux');
 
-    protected function _addEmptyField($fieldset) {
-        $configData = $this->getConfigData();
-        $path = 'shoppingflux_mo/advanced_shipping_method/zzzzzz';
-        $e = $this->_getDummyElement();
-        $fieldset->addField('zzzzzz', 'note', array(
-                    'name' => 'groups[advanced_shipping_method][fields][zzzzzz][value]',
-                    'label' => Mage::helper('profileolabs_shoppingflux')->__('There is no marketplace shipping method registered yet.'),
-                ))->setRenderer($this->_getFieldRenderer());
+        $field = $fieldset->addField(
+            '__shopping_feed_empty__',
+            'note',
+            array(
+                'name' => 'groups[advanced_shipping_method][fields][__shopping_feed_empty__][value]',
+                'label' => $helper->__('There is no marketplace shipping method registered yet.'),
+            )
+        );
 
+        $field->setRenderer($this->_getFieldRenderer());
     }
-
 }

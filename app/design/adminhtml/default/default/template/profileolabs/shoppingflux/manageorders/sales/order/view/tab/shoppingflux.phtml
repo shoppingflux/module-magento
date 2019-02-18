@@ -1,44 +1,43 @@
 <div class="entry-edit">
     <div class="entry-edit-head">
-        <h4 class="icon-head head-payment-method"><?php echo $this->__('Shopping Feed Information') ?></h4>
+        <h4 class="icon-head head-payment-method"><?php echo $this->htmlEscape($this->__('Shopping Feed Information')) ?></h4>
     </div>
     <fieldset>
         <table cellspacing="0" class="form-list">
             <tbody>
                 <tr>
                     <td class="label">
-                        <label><?php echo $this->__('Marketplace') ?></label>
+                        <label><?php echo $this->htmlEscape($this->__('Marketplace')) ?></label>
                     </td>
                     <td class="value">
-                        <label><?php echo $this->getOrder()->getMarketplaceShoppingflux() ?></label>
+                        <label><?php echo $this->htmlEscape($this->getOrder()->getMarketplaceShoppingflux()) ?></label>
                     </td>
                 </tr>
                 <tr>
                     <td class="label">
-                        <label><?php echo $this->__('Marketplace Fees') ?></label>
+                        <label><?php echo $this->htmlEscape($this->__('Marketplace Fees')) ?></label>
                     </td>
                     <td class="value">
-                        <label><?php echo $this->getOrder()->getFeesShoppingflux() ?></label>
+                        <label><?php echo $this->htmlEscape($this->getOrder()->getFeesShoppingflux()) ?></label>
                     </td>
                 </tr>
                 <tr>
                     <td class="label">
-                        <label><?php echo $this->__('Marketplace Order Id') ?></label>
+                        <label><?php echo $this->htmlEscape($this->__('Marketplace Order Id')) ?></label>
                     </td>
                     <td class="value">
-                        <label><?php echo $this->getOrder()->getOrderIdShoppingflux() ?></label>
+                        <label><?php echo $this->htmlEscape($this->getOrder()->getOrderIdShoppingflux()) ?></label>
                     </td>
                 </tr>
                 <tr>
                     <td class="label">
-                        <label><?php echo $this->__('Note') ?></label>
+                        <label><?php echo $this->htmlEscape($this->__('Note')) ?></label>
                     </td>
                     <td class="value">
-                        <label><?php echo $this->getOrder()->getOtherShoppingflux() ?></label>
+                        <label><?php echo $this->htmlEscape($this->getOrder()->getOtherShoppingflux()) ?></label>
                     </td>
                 </tr>
             </tbody>
         </table>
-
     </fieldset>
 </div>

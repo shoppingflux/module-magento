@@ -1,90 +1,119 @@
 <?php
 
-/**
- * Shopping Flux Service
- * @category   ShoppingFlux
- * @package    Profileolabs_Shoppingflux
- * @author kassim belghait, vincent enjalbert @ web-cooking.net
- */
-class Profileolabs_Shoppingflux_Model_Config extends Varien_Object {
+class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
+{
+    /**
+     * @param string $key
+     * @param int|null $storeId
+     * @return mixed
+     */
+    public function getConfigData($key, $storeId = null)
+    {
+        $dataKey = str_replace('/', '_', 'conf/' . $key . '/' . (($storeId === null) ? '0' : $storeId));
 
-    public function getConfigData($key, $storeId = null) {
-        $dataKey = str_replace('/', '_', 'conf/' . $key . '/' . (is_null($storeId) ? '0' : $storeId));
         if (!$this->hasData($dataKey)) {
             $value = Mage::getStoreConfig($key, $storeId);
             $this->setData($dataKey, $value);
         }
+
         return $this->getData($dataKey);
     }
 
-    public function getConfigFlag($key, $storeId = null) {
-        $dataKey = str_replace('/', '_', 'flag/' . $key . '/' . (is_null($storeId) ? '0' : $storeId));
+    /**
+     * @param string $key
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function getConfigFlag($key, $storeId = null)
+    {
+        $dataKey = str_replace('/', '_', 'flag/' . $key . '/' . (($storeId === null) ? '0' : $storeId));
+
         if (!$this->hasData($dataKey)) {
             $value = Mage::getStoreConfigFlag($key, $storeId);
             $this->setData($dataKey, $value);
         }
+
         return $this->getData($dataKey);
     }
 
     /**
-     * Return API KEY
+     * @param int|null $storeId
      * @return string
      */
-    public function getApiKey($storeId = null) {
-        return $this->getConfigData('shoppingflux/configuration/api_key', $storeId);
-    }
-    
-    public function getIdClient($storeId = null) {
-        return $this->getConfigData('shoppingflux/configuration/login', $storeId);
-    }
-    
-    public function getIdTracking($storeId = null) {
-        return $this->getConfigData('shoppingflux/configuration/id_tracking', $storeId);
-    }
-    
-    
-
-    public function isBuylineEnabled($storeId = null) {
-        return $this->getConfigFlag('shoppingflux_export/configuration/enable_buyline', $storeId);
+    public function getApiKey($storeId = null)
+    {
+        return trim($this->getConfigData('shoppingflux/configuration/api_key', $storeId));
     }
 
-    /*
-     * Define is in test mode
-     * @return boolean
+    /**
+     * @param int|null $storeId
+     * @return string
      */
+    public function getIdClient($storeId = null)
+    {
+        return trim($this->getConfigData('shoppingflux/configuration/login', $storeId));
+    }
 
-    public function isSandbox() {
+    /**
+     * @param int|null $storeId
+     * @return string
+     */
+    public function getIdTracking($storeId = null)
+    {
+        return trim($this->getConfigData('shoppingflux/configuration/id_tracking', $storeId));
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSandbox()
+    {
         return $this->getConfigFlag('shoppingflux/configuration/is_sandbox');
     }
 
     /**
-     * Get WS URI
-     * @return string uri of web service
+     * @return string
      */
-    public function getWsUri() {
-        if ($this->isSandbox())
-            return $this->getConfigData('shoppingflux/configuration/ws_uri_sandbox');
-        return $this->getConfigData('shoppingflux/configuration/ws_uri_prod');
+    public function getWsUri()
+    {
+        return $this->isSandbox()
+            ? trim($this->getConfigData('shoppingflux/configuration/ws_uri_sandbox'))
+            : trim($this->getConfigData('shoppingflux/configuration/ws_uri_prod'));
     }
 
-    public function isExportEnabled($storeId = null) {
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function isExportEnabled($storeId = null)
+    {
         return $this->getConfigFlag('shoppingflux_export/general/active', $storeId);
     }
 
-    public function isExportFilteredByAttribute($storeId = null) {
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function isExportFilteredByAttribute($storeId = null)
+    {
         return $this->getConfigFlag('shoppingflux_export/general/filter_by_attribute', $storeId);
     }
 
     /**
-     * Retrieve if export sold out products
-     *
-     * @return boolean
+     * @param int|null $storeId
+     * @return bool
      */
-    public function isExportSoldout($storeId = null) {
+    public function isExportSoldout($storeId = null)
+    {
         return $this->getConfigFlag('shoppingflux_export/general/export_soldout', $storeId);
     }
-    
-    public function isExportNotSalable($storeId = null) {
+
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function isExportNotSalable($storeId = null)
+    {
         return $this->getConfigFlag('shoppingflux_export/general/export_not_salable', $storeId);
     }
 
@@ -114,243 +143,353 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object {
     {
         return ($this->getNotSalableRetentionDuration($storeId) !== false);
     }
- 
-    public function getVisibilitiesToExport($storeId = null) {
-        return explode(',', $this->getConfigData('shoppingflux_export/general/export_visibility', $storeId));
+
+    /**
+     * @param int|null $storeId
+     * @return int[]
+     */
+    public function getVisibilitiesToExport($storeId = null)
+    {
+        return array_filter(
+            array_map(
+                'intval',
+                explode(',', $this->getConfigData('shoppingflux_export/general/export_visibility', $storeId))
+            )
+        );
     }
 
     /**
-     * Retrieve limit of product in query
-     * 
+     * @param int|null $storeId
      * @return int
      */
-    public function getExportProductLimit($storeId = null) {
+    public function getExportProductLimit($storeId = null)
+    {
         return (int) $this->getConfigData('shoppingflux_export/general/limit_product', $storeId);
     }
 
-    public function getUseAllStoreCategories($storeId = null) {
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function getUseAllStoreCategories($storeId = null)
+    {
         return $this->getConfigFlag('shoppingflux_export/category/all_store_categories', $storeId);
     }
 
-    public function getUseAllStoreProducts($storeId = null) {
-        return $this->getConfigFlag('shoppingflux_export/general/all_store_products', $storeId);
-    }
-    
-    public function getUseOnlySFCategory($storeId = null) {
-        return $this->getConfigFlag('shoppingflux_export/category/use_only_shoppingflux_category', $storeId);
-    }
-    
-    public function getMaxCategoryLevel($storeId = null) {
-        return $this->getConfigData('shoppingflux_export/category/max_category_level', $storeId);
-    }
-    
-    public function getEnableEvents($storeId = null) {
-        return $this->getConfigFlag('shoppingflux_export/general/enable_events', $storeId);
-    }
-    
-    public function getManageConfigurables($storeId = null) {
-        return $this->getConfigFlag('shoppingflux_export/general/manage_configurable', $storeId);
-    }
-    
-    public function getManageCatalogRules($storeId = null) {
-        return $this->getConfigFlag('shoppingflux_export/general/manage_catalog_rules', $storeId);
-    }
-    
-    public function getManageMediaGallery($storeId = null) {
-        return $this->getConfigFlag('shoppingflux_export/general/manage_media_gallery', $storeId);
-    }
-    
-    public function getQtyIncrements($product) {
-        if(!$product->getStockItem()->getData('enable_qty_increments')) {
-            return 1;
-        }
-        return max(1, intval($product->getStockItem()->getData('qty_increments')));
-    }
-    
-    public function getTransformQtyIncrements($product, $storeId = null) {
-        if(!$this->getConfigFlag('shoppingflux_export/general/transform_qty_increments', $storeId)) {
-            return false;
-        }
-        return $this->getQtyIncrements($product) > 1;
-    }
-    
-    
-    
     /**
-     * Return Attributes Knowed in array with key=>value
-     * key = node adn value = inner text
-     * @return array 
-     * @deprecated since version 0.8.0
+     * @param int|null $storeId
+     * @return bool
      */
-    public function getMappingAttributesKnow($storeId = null) {
-        return $this->getConfigData('shoppingflux_export/attributes_know', $storeId);
+    public function getUseAllStoreProducts($storeId = null)
+    {
+        return $this->getConfigFlag('shoppingflux_export/general/all_store_products', $storeId);
     }
 
     /**
-     * Return Attributes Unknowed in array with key=>value
-     * key = node adn value = inner text
-     * @param int $storeId
-     * @return array
-     * @deprecated since version 0.8.0 
+     * @param int|null $storeId
+     * @return bool
      */
-    public function getMappgingAttributesUnKnow($storeId = null) {
-        return $this->getConfigData('shoppingflux_export/attributes_unknow', $storeId);
+    public function getUseOnlySFCategory($storeId = null)
+    {
+        return $this->getConfigFlag('shoppingflux_export/category/use_only_shoppingflux_category', $storeId);
     }
-    
-    
-    public function getMappingAttributes($storeId = null) {
+
+    /**
+     * @param int|null $storeId
+     * @return mixed
+     */
+    public function getMaxCategoryLevel($storeId = null)
+    {
+        return $this->getConfigData('shoppingflux_export/category/max_category_level', $storeId);
+    }
+
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function getEnableEvents($storeId = null)
+    {
+        return $this->getConfigFlag('shoppingflux_export/general/enable_events', $storeId);
+    }
+
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function getManageConfigurables($storeId = null)
+    {
+        return $this->getConfigFlag('shoppingflux_export/general/manage_configurable', $storeId);
+    }
+
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function getManageCatalogRules($storeId = null)
+    {
+        return $this->getConfigFlag('shoppingflux_export/general/manage_catalog_rules', $storeId);
+    }
+
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function getManageMediaGallery($storeId = null)
+    {
+        return $this->getConfigFlag('shoppingflux_export/general/manage_media_gallery', $storeId);
+    }
+
+    /**
+     * @param Mage_Catalog_Model_Product $product
+     * @return int
+     */
+    public function getQtyIncrements(Mage_Catalog_Model_Product $product)
+    {
+        /** @var Mage_CatalogInventory_Model_Stock_Item $stockItem */
+        $stockItem = $product->getStockItem();
+        return $stockItem->getData('enable_qty_increments') ? max(1, (int) $stockItem->getData('qty_increments')) : 1;
+    }
+
+    /**
+     * @param Mage_Catalog_Model_Product $product
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function getTransformQtyIncrements(Mage_Catalog_Model_Product $product, $storeId = null)
+    {
+        return $this->getConfigFlag('shoppingflux_export/general/transform_qty_increments', $storeId)
+            ? ($this->getQtyIncrements($product) > 1)
+            : false;
+    }
+
+    /**
+     * @param int|null $storeId
+     * @return array
+     */
+    public function getMappingAttributes($storeId = null)
+    {
         $data = $this->getConfigData('shoppingflux_export/attributes_mapping', $storeId);
-        unset($data['additional']);
-        unset($data['additional,']);
+
+        if (isset($data['additional'])) {
+            unset($data['additional']);
+        }
+
+        if (isset($data['additional,'])) {
+            unset($data['additional,']);
+        }
+
         return $data;
     }
 
     /**
-     * Return Attributes Unknowed in array with key=>value
-     * key = node adn value = inner text
-     * @param int $storeId
-     * @return array 
+     * @param int|null $storeId
+     * @return array
      */
-    public function getAdditionalAttributes($storeId = null) {
-        $additionnal = $this->getConfigData('shoppingflux_export/attributes_mapping/additional', $storeId);
-        $additionnal = explode(',',$additionnal);
-        $additionnal = array_filter($additionnal);
-        $allAttributes = $this->getMappingAttributes($storeId);
-        //We do not want attributes that are already in known or unknown lists
-        $additionnal = array_diff($additionnal, $allAttributes);
-        return $additionnal;
+    public function getAdditionalAttributes($storeId = null)
+    {
+        $additional = $this->getConfigData('shoppingflux_export/attributes_mapping/additional', $storeId);
+        $additional = array_filter(explode(',', $additional));
+        $additional = array_diff($additional, $this->getMappingAttributes($storeId));
+        return $additional;
     }
 
     /**
-     * Return ALL Attributes Knowed and Unknowed in array with key=>value
-     * key = node adn value = inner text
-     * @return array 
-     * @param int $storeId
-     * @deprecated since version 0.8.0
+     * @return int
      */
-    public function getMappingAllAttributes($storeId = null) {
-        return $this->getMappingAttributes($storeId);
-        //return array_merge($this->getMappingAttributesKnow($storeId), $this->getMappgingAttributesUnKnow($storeId));
+    public function getMemoryLimit()
+    {
+        $memoryLimit = (int) $this->getConfigData('shoppingflux_export/general/memory_limit');
+        return ($memoryLimit > 10 ? $memoryLimit : 2048);
     }
-    
-    public function getMemoryLimit() {
-        $memoryLimit = intval($this->getConfigData('shoppingflux_export/general/memory_limit'));
-        if($memoryLimit>10) {
-            return $memoryLimit;
-        }
-        return 2048;
-    }
-    
-    public function isSyncEnabled() {
-        foreach(Mage::app()->getStores() as $store) {
-            if($this->getConfigFlag('shoppingflux_export/general/enable_sync', $store->getId())) {
+
+    /**
+     * @return bool
+     */
+    public function isSyncEnabled()
+    {
+        /** @var Mage_Core_Model_Store $store */
+        foreach (Mage::app()->getStores() as $store) {
+            if ($this->getConfigFlag('shoppingflux_export/general/enable_sync', $store->getId())) {
                 return true;
             }
         }
+
         return false;
     }
-    
-    public function useManageStock($storeId = null) {
+
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function useManageStock($storeId = null)
+    {
         return $this->getConfigFlag('shoppingflux_export/general/use_manage_stock', $storeId);
     }
-    
-    public function getExportedImageCount($storeId = null) {
+
+    /**
+     * @param null $storeId
+     * @return int|false
+     */
+    public function getExportedImageCount($storeId = null)
+    {
         $exportAll = $this->getConfigFlag('shoppingflux_export/general/export_all_images', $storeId);
         $count = (int) $this->getConfigData('shoppingflux_export/general/exported_image_count', $storeId);
         return (!$exportAll && ($count > 0) ? $count : false);
     }
 
-    /** ORDERS * */
-    public function isOrdersEnabled($storeId = null) {
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function isOrdersEnabled($storeId = null)
+    {
         return $this->getConfigFlag('shoppingflux_mo/manageorders/enabled', $storeId);
     }
 
     /**
-     * Get Limit orders
-     * @return int 
+     * @param int|null $storeId
+     * @return int
      */
-    public function getLimitOrders($storeId = null) {
-        $limit = $this->getConfigData('shoppingflux_mo/manageorders/limit_orders', $storeId);
-        if ($limit < 1)
-            $limit = 10;
-        return $limit;
-    }
-    
-    public function getAddressLengthLimit($storeId = null) {
-        $limit = $this->getConfigData('shoppingflux_mo/import_customer/limit_address_length');
-        if(!$limit || $limit < 20)
-            return false;
-        return $limit;
+    public function getLimitOrders($storeId = null)
+    {
+        $limit = (int) $this->getConfigData('shoppingflux_mo/manageorders/limit_orders', $storeId);
+        return ($limit < 1 ? 10 : $limit);
     }
 
     /**
-     * get customer Group
+     * @param int|null $storeId
+     * @return int|false
      */
-    public function getCustomerGroupIdFor($marketplace = false, $storeId = null) {
+    public function getAddressLengthLimit($storeId = null)
+    {
+        $limit = (int) $this->getConfigData('shoppingflux_mo/import_customer/limit_address_length', $storeId);
+        return ($limit < 20 ? false : $limit);
+    }
+
+    /**
+     * @param string|false $marketplace
+     * @param int|null $storeId
+     * @return int|false
+     */
+    public function getCustomerGroupIdFor($marketplace = false, $storeId = null)
+    {
         if ($marketplace) {
             $marketplace = strtolower($marketplace);
-            $customerGroupId = $this->getConfigData('shoppingflux_mo/import_customer/' . $marketplace . "_group", $storeId);
-            if ($customerGroupId)
-                return $customerGroupId;
+            $groupId = $this->getConfigData('shoppingflux_mo/import_customer/' . $marketplace . '_group', $storeId);
+
+            if ($groupId) {
+                return (int) $groupId;
+            }
         }
-        $customerGroupId = $this->getConfigData("shoppingflux_mo/import_customer/default_group", $storeId);
-        if ($customerGroupId)
-            return $customerGroupId;
-        return false;
-    }
-    
-    
-    
-    public function getShippingMethodFor($marketplace = false, $sfShippingMethod = false, $storeId = null) {
-        $defaultShippingMethod = Mage::getStoreConfig('shoppingflux_mo/shipping_method/default_method', $storeId);
-        if(!$marketplace) {
-            return $defaultShippingMethod;
-        }
-        $marketplace = strtolower($marketplace);
-        $marketplaceShippingMode = Mage::getStoreConfig('shoppingflux_mo/shipping_method/' . $marketplace . '_method', $storeId);
-        if(!$sfShippingMethod) {
-            return $marketplaceShippingMode?$marketplaceShippingMode:$defaultShippingMethod;
-        }
-        $sfShippingMethodCode = Mage::getModel('profileolabs_shoppingflux/manageorders_shipping_method')->getFullShippingMethodCodeFor($marketplace, $sfShippingMethod);
-        $sfShippingMethodCode = preg_replace('%[^a-zA-Z0-9_]%', '', $sfShippingMethodCode);
-        $shippingMethod = Mage::getStoreConfig('shoppingflux_mo/advanced_shipping_method/' . $sfShippingMethodCode, $storeId);
-        return $shippingMethod?$shippingMethod:($marketplaceShippingMode?$marketplaceShippingMode:$defaultShippingMethod);
-    }
-    
-    public function getShipmentUpdateLimit($storeId=null) {
-        $nbHours = Mage::getStoreConfig('shoppingflux_mo/shipment_update/limit_hours', $storeId);
-        $nbHours = intval($nbHours);
-        if(!$nbHours) {
-            return date('Y-m-d H:i:s', strtotime('-20 minutes'));
-        }
-        return date('Y-m-d H:i:s', strtotime('-'.$nbHours.' hours'));
+
+        $groupId = $this->getConfigData('shoppingflux_mo/import_customer/default_group', $storeId);
+        return ($groupId ? (int) $groupId : false);
     }
 
     /**
-     * Retrieve if we must to create invoice
-     * 
-     * @return boolean
+     * @param int|null $storeId
+     * @return string
      */
-    public function createInvoice($storeId = null) {
+    protected function _getDefaultShippingMethod($storeId = null)
+    {
+        return trim(Mage::getStoreConfig('shoppingflux_mo/shipping_method/default_method', $storeId));
+    }
+
+    /**
+     * @param string $marketplace
+     * @param int|null $storeId
+     * @return string
+     */
+    protected function _getMarketplaceShippingMethod($marketplace, $storeId = null)
+    {
+        return trim(Mage::getStoreConfig('shoppingflux_mo/shipping_method/' . $marketplace . '_method', $storeId));
+    }
+
+    /**
+     * @param string $code
+     * @param int|null $storeId
+     * @return string
+     */
+    protected function _getSfShippingMethod($code, $storeId = null)
+    {
+        return trim(Mage::getStoreConfig('shoppingflux_mo/advanced_shipping_method/' . $code, $storeId));
+    }
+
+    /**
+     * @param string|false $marketplace
+     * @param string|false $sfShippingMethod
+     * @param int|null $storeId
+     * @return string
+     */
+    public function getShippingMethodFor($marketplace = false, $sfShippingMethod = false, $storeId = null)
+    {
+        $defaultMethod = $this->_getDefaultShippingMethod();
+
+        if (!$marketplace) {
+            return $defaultMethod;
+        }
+
+        $marketplace = strtolower($marketplace);
+        $marketplaceMethod = $this->_getMarketplaceShippingMethod($marketplace, $storeId);
+
+        if (!$sfShippingMethod) {
+            return $marketplaceMethod ? $marketplaceMethod : $defaultMethod;
+        }
+
+        /** @var Profileolabs_Shoppingflux_Model_Manageorders_Shipping_Method $shippingMethodModel */
+        $shippingMethodModel = Mage::getModel('profileolabs_shoppingflux/manageorders_shipping_method');
+        $sfMethodCode = $shippingMethodModel->getFullShippingMethodCodeFor($marketplace, $sfShippingMethod);
+        $sfMethodCode = preg_replace('%[^a-zA-Z0-9_]%', '', $sfMethodCode);
+        $sfMethod = $this->_getSfShippingMethod($sfMethodCode);
+
+        return ($sfMethod ? $sfMethod : ($marketplaceMethod ? $marketplaceMethod : $defaultMethod));
+    }
+
+    /**
+     * @param int|null $storeId
+     * @return string
+     */
+    public function getShipmentUpdateLimit($storeId = null)
+    {
+        $hoursLimit = (int) Mage::getStoreConfig('shoppingflux_mo/shipment_update/limit_hours', $storeId);
+        return $hoursLimit
+            ? date('Y-m-d H:i:s', strtotime('-' . $hoursLimit . ' hours'))
+            : date('Y-m-d H:i:s', strtotime('-20 minutes'));
+    }
+
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function createInvoice($storeId = null)
+    {
         return $this->getConfigFlag('shoppingflux_mo/manageorders/create_invoice', $storeId);
     }
 
     /**
-     * Retrieve if we must to apply tax
-     * 
-     * @return boolean
+     * @param int|null $storeId
+     * @return bool
      */
-    public function applyTax($storeId = null) {
+    public function applyTax($storeId = null)
+    {
         return true;
-        //return $this->getConfigFlag('shoppingflux_mo/manageorders/apply_tax', $storeId);
-    }
-    
-    public function preferMobilePhone($storeId = null) {
-        return $this->getConfigFlag("shoppingflux_mo/import_customer/prefer_mobile_phone", $storeId);
-    }
-    
-    public function getMobilePhoneAttribute($storeId = null) {
-        return $this->getConfigData("shoppingflux_mo/import_customer/mobile_attribute", $storeId);
     }
 
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function preferMobilePhone($storeId = null)
+    {
+        return $this->getConfigFlag('shoppingflux_mo/import_customer/prefer_mobile_phone', $storeId);
+    }
+
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function getMobilePhoneAttribute($storeId = null)
+    {
+        return $this->getConfigData('shoppingflux_mo/import_customer/mobile_attribute', $storeId);
+    }
 }

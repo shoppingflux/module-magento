@@ -1,13 +1,10 @@
 <?php
 
-/**
- * Shopping Flux
- * @category   ShoppingFlux
- * @package    Profileolabs_Shoppingflux
- * @author kassim belghait - Vincent Enjalbert
- */
-class Profileolabs_Shoppingflux_Model_Manageorders_Source_Attributes {
-
+class Profileolabs_Shoppingflux_Model_Manageorders_Source_Attributes
+{
+    /**
+     * @var array
+     */
     protected $_exceptions = array(
         'website_id',
         'store_id',
@@ -32,22 +29,31 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Source_Attributes {
         'disable_auto_group_change',
         'from_shoppingflux',
     );
+
+    /**
+     * @var array|null
+     */
     protected $_attributes = null;
 
-    public function toOptionArray() {
-        if (is_null($this->_attributes)) {
-            $this->_attributes = array();
+    /**
+     * @return array
+     */
+    public function toOptionArray()
+    {
+        if ($this->_attributes === null) {
+            $this->_attributes = array(array('value' => '', 'label' => ''));
 
-            $model = Mage::getResourceModel('customer/customer');
-            $typeId = $model->getTypeId();
+            /** @var Mage_Customer_Model_Resource_Customer $customerResource */
+            $customerResource = Mage::getResourceModel('customer/customer');
+            $typeId = $customerResource->getTypeId();
 
-            $attributesCollection = Mage::getResourceModel('eav/entity_attribute_collection')
-                    ->setEntityTypeFilter($typeId)
-                    ->load();
-            $this->_attributes = array();
-            $this->_attributes[] = array('value' => '', 'label' => '');
-            foreach ($attributesCollection as $attribute) {
+            /** @var Mage_Eav_Model_Resource_Entity_Attribute_Collection $attributeCollection */
+            $attributeCollection = Mage::getResourceModel('eav/entity_attribute_collection');
+            $attributeCollection->setEntityTypeFilter($typeId)->load();
+
+            foreach ($attributeCollection as $attribute) {
                 $code = $attribute->getAttributeCode();
+
                 if (!in_array($code, $this->_exceptions)) {
                     $this->_attributes[] = array('value' => $code, 'label' => $code);
                 }
@@ -55,5 +61,4 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Source_Attributes {
         }
         return $this->_attributes;
     }
-
 }

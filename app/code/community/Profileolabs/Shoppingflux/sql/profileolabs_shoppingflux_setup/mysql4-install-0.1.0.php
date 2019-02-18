@@ -1,121 +1,128 @@
 <?php
 
-/**
- * @category    ShoppingFlux
- * @package     ShoppingFLux_ManageOrders
- * @author 		kassim belghait
- */
-$installerCustomer = new Mage_Customer_Model_Entity_Setup('profileolabs_shoppingflux_setup');
-/* @var $installerCustomer Mage_Customer_Model_Entity_Setup */
+/** @var Mage_Eav_Model_Config $eavConfig */
+$eavConfig = Mage::getSingleton('eav/config');
 
-$installerCustomer->startSetup();
+/** @var Mage_Customer_Model_Resource_Setup $customerInstaller */
+$customerInstaller = Mage::getResourceModel('customer/setup', 'profileolabs_shoppingflux_setup');
+$customerInstaller->startSetup();
+$entityTypeId = $customerInstaller->getEntityTypeId('customer');
 
-//$attribute   = Mage::getModel('eav/config')->getAttribute('customer', 'from_shoppingflux');
-$entityId = $installerCustomer->getEntityTypeId('customer');
-$attribute = $installerCustomer->getAttribute($entityId, 'from_shoppingflux');
-if (!$attribute) {
-
-    $installerCustomer->addAttribute('customer', 'from_shoppingflux', array(
-        'type' => 'int',
-        'label' => 'From ShoppingFlux',
-        'visible' => true,
-        'required' => false,
-        'unique' => false,
-        'sort_order' => 700,
-        'default' => 0,
-        'input' => 'select',
-        'source' => 'eav/entity_attribute_source_boolean',
-    ));
-
-    $usedInForms = array(
-        'adminhtml_customer',
+if (!$attribute = $customerInstaller->getAttribute($entityTypeId, 'from_shoppingflux')) {
+    $customerInstaller->addAttribute(
+        'customer',
+        'from_shoppingflux',
+        array(
+            'type' => 'int',
+            'label' => 'From ShoppingFlux',
+            'visible' => true,
+            'required' => false,
+            'unique' => false,
+            'sort_order' => 700,
+            'default' => 0,
+            'input' => 'select',
+            'source' => 'eav/entity_attribute_source_boolean',
+        )
     );
 
-    $attribute = Mage::getSingleton('eav/config')->getAttribute('customer', 'from_shoppingflux');
-    $attribute->setData('used_in_forms', $usedInForms);
+    $attribute = $eavConfig->getAttribute('customer', 'from_shoppingflux');
+    $attribute->setData('used_in_forms', array('adminhtml_customer'));
     $attribute->setData('sort_order', 700);
-
     $attribute->save();
 }
 
-$installerCustomer->endSetup();
+$customerInstaller->endSetup();
 
-$installerSales = new Mage_Sales_Model_Mysql4_Setup('profileolabs_shoppingflux_setup');
-/* @var $installerSales Mage_Sales_Model_Mysql4_Setup */
+/** @var Mage_Sales_Model_Resource_Setup $salesInstaller */
+$salesInstaller = Mage::getResourceModel('sales/setup', 'profileolabs_shoppingflux_setup');
+$salesInstaller->startSetup();
+$entityTypeId = $salesInstaller->getEntityTypeId('order');
 
-$installerSales->startSetup();
-//if(!Mage::getSingleton('eav/config')->getAttribute('order', 'from_shoppingflux')->getId())
-$entityId = $installerSales->getEntityTypeId('order');
-$attribute = $installerSales->getAttribute($entityId, 'from_shoppingflux');
-if (!$attribute)
-    $installerSales->addAttribute('order', 'from_shoppingflux', array(
-        'type' => 'int',
-        'label' => 'From ShoppingFlux',
-        'visible' => true,
-        'required' => false,
-        'unique' => false,
-        'sort_order' => 700,
-        'default' => 0,
-        'input' => 'select',
-        'source' => 'eav/entity_attribute_source_boolean',
-        'grid' => true,
-    ));
+if (!$attribute = $salesInstaller->getAttribute($entityTypeId, 'from_shoppingflux')) {
+    $salesInstaller->addAttribute(
+        'order',
+        'from_shoppingflux',
+        array(
+            'type' => 'int',
+            'label' => 'From ShoppingFlux',
+            'visible' => true,
+            'required' => false,
+            'unique' => false,
+            'sort_order' => 700,
+            'default' => 0,
+            'input' => 'select',
+            'source' => 'eav/entity_attribute_source_boolean',
+            'grid' => true,
+        )
+    );
+}
 
-//if(!Mage::getSingleton('eav/config')->getAttribute('order', 'order_id_shoppingflux')->getId())
-$attribute = $installerSales->getAttribute($entityId, 'order_id_shoppingflux');
-if (!$attribute)
-    $installerSales->addAttribute('order', 'order_id_shoppingflux', array(
-        'type' => 'varchar',
-        'label' => 'ID Order ShoppingFlux',
-        'visible' => true,
-        'required' => false,
-        'unique' => false,
-        'sort_order' => 705,
-        'input' => 'text',
-        'grid' => true,
-    ));
+if (!$salesInstaller->getAttribute($entityTypeId, 'order_id_shoppingflux')) {
+    $salesInstaller->addAttribute(
+        'order',
+        'order_id_shoppingflux',
+        array(
+            'type' => 'varchar',
+            'label' => 'ID Order ShoppingFlux',
+            'visible' => true,
+            'required' => false,
+            'unique' => false,
+            'sort_order' => 705,
+            'input' => 'text',
+            'grid' => true,
+        )
+    );
+}
 
-//if(!Mage::getSingleton('eav/config')->getAttribute('order', 'marketplace_shoppingflux')->getId())
-$attribute = $installerSales->getAttribute($entityId, 'marketplace_shoppingflux');
-if (!$attribute)
-    $installerSales->addAttribute('order', 'marketplace_shoppingflux', array(
-        'type' => 'varchar',
-        'label' => 'Marketplace ShoppingFlux',
-        'visible' => true,
-        'required' => false,
-        'unique' => false,
-        'sort_order' => 710,
-        'input' => 'text',
-        'grid' => true,
-    ));
+if (!$attribute = $salesInstaller->getAttribute($entityTypeId, 'marketplace_shoppingflux')) {
+    $salesInstaller->addAttribute(
+        'order',
+        'marketplace_shoppingflux',
+        array(
+            'type' => 'varchar',
+            'label' => 'Marketplace ShoppingFlux',
+            'visible' => true,
+            'required' => false,
+            'unique' => false,
+            'sort_order' => 710,
+            'input' => 'text',
+            'grid' => true,
+        )
+    );
+}
 
-//if(!Mage::getSingleton('eav/config')->getAttribute('order', 'fees_shoppingflux')->getId())
-$attribute = $installerSales->getAttribute($entityId, 'fees_shoppingflux');
-if (!$attribute)
-    $installerSales->addAttribute('order', 'fees_shoppingflux', array(
-        'type' => 'decimal',
-        'label' => 'Fees ShoppingFlux',
-        'visible' => true,
-        'required' => false,
-        'unique' => false,
-        'sort_order' => 720,
-        'input' => 'text',
-        'grid' => true,
-    ));
+if (!$attribute = $salesInstaller->getAttribute($entityTypeId, 'fees_shoppingflux')) {
+    $salesInstaller->addAttribute(
+        'order',
+        'fees_shoppingflux',
+        array(
+            'type' => 'decimal',
+            'label' => 'Fees ShoppingFlux',
+            'visible' => true,
+            'required' => false,
+            'unique' => false,
+            'sort_order' => 720,
+            'input' => 'text',
+            'grid' => true,
+        )
+    );
+}
 
-$installerSales->endSetup();
+$salesInstaller->endSetup();
 
+/** @var Mage_Core_Model_Resource_Setup $installer */
 $installer = $this;
-
 $installer->startSetup();
 
 $installer->run(
-        "CREATE TABLE IF NOT EXISTS `{$this->getTable('shoppingflux_log')}` (
-			`id` int(11) NOT NULL auto_increment,
-			`date` timestamp NOT NULL default CURRENT_TIMESTAMP,
-			`message` text NOT NULL,
-			PRIMARY KEY  (`id`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+    "
+    CREATE TABLE IF NOT EXISTS `{$this->getTable('profileolabs_shoppingflux/manageorders_log')}` (
+    `id` int(11) NOT NULL auto_increment,
+    `date` timestamp NOT NULL default CURRENT_TIMESTAMP,
+    `message` text NOT NULL,
+    PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    "
+);
 
 $installer->endSetup();
-

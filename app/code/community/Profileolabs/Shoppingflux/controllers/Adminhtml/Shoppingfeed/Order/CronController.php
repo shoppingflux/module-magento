@@ -1,42 +1,38 @@
 <?php
-/**
- * Shopping Flux
- * @category   ShoppingFlux
- * @package    Profileolabs_Shoppingflux_ManageOrders
- * @author Vincent Enjalbert
- */
+
 class Profileolabs_Shoppingflux_Adminhtml_Shoppingfeed_Order_CronController extends Mage_Adminhtml_Controller_Action
 {
-	protected function _initAction() {
-		$this->loadLayout()
-		->_setActiveMenu('shoppingflux/manageorders/crons')
-		->_addBreadcrumb(Mage::helper('profileolabs_shoppingflux')->__('Crons'), Mage::helper('profileolabs_shoppingflux')->__('Crons'));
-
-		return $this;
-	}
-	
-	
-	public function indexAction()
-	{
-		$this->_initAction()
-		->renderLayout();
-		
-		return $this;
-	}
-	
-	
-	
-	public function gridAction()
-	{
-		$this->getResponse()->setBody(
-		$this->getLayout()->createBlock('profileolabs_shoppingflux/manageorders_adminhtml_cron_grid')->toHtml()
-		);
-		
-		return $this;
-	}
-	
-         protected function _isAllowed()
+    /**
+     * @return $this
+     */
+    protected function _initAction()
     {
-        return Mage::getSingleton('admin/session')->isAllowed('shoppingflux');
+        /** @var Profileolabs_Shoppingflux_Helper_Data $helper */
+        $helper = Mage::helper('profileolabs_shoppingflux');
+
+        $this->loadLayout()
+            ->_setActiveMenu('shoppingflux/manageorders/crons')
+            ->_addBreadcrumb($helper->__('Crons'), $helper->__('Crons'));
+
+        return $this;
+    }
+
+    public function indexAction()
+    {
+        $this->_initAction()->renderLayout();
+    }
+
+    public function gridAction()
+    {
+        /** @var Profileolabs_Shoppingflux_Block_Manageorders_Adminhtml_Cron_Grid $gridBlock */
+        $gridBlock = $this->getLayout()->createBlock('profileolabs_shoppingflux/manageorders_adminhtml_cron_grid');
+        $this->getResponse()->setBody($gridBlock->toHtml());
+    }
+
+    protected function _isAllowed()
+    {
+        /** @var Mage_Admin_Model_Session $session */
+        $session = Mage::getSingleton('admin/session');
+        return $session->isAllowed('shoppingflux');
     }
 }

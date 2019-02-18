@@ -1,52 +1,55 @@
 <?php
-/**
- * Shopping Flux
- * @category   ShoppingFlux
- * @package    Profileolabs_Shoppingflux_ManageOrders
- * @author kassim belghait
- */
+
 class Profileolabs_Shoppingflux_Adminhtml_Shoppingfeed_Order_LogController extends Mage_Adminhtml_Controller_Action
 {
-	protected function _initAction() {
-		$this->loadLayout()
-		->_setActiveMenu('shoppingflux/manageorders/log')
-		->_addBreadcrumb(Mage::helper('profileolabs_shoppingflux')->__('ShoppingFlux orders log'), Mage::helper('profileolabs_shoppingflux')->__('ShoppingFlux orders log'));
-
-		return $this;
-	}
-	
-	
-	public function indexAction()
-	{
-		$this->_initAction()
-		->renderLayout();
-		
-		return $this;
-	}
-	
-	public function deleteAction()
-	{
-		$collection = Mage::getModel('profileolabs_shoppingflux/manageorders_log')->getCollection();
-		foreach($collection as $log)
-			$log->delete();
-			
-		$this->_getSession()->addSuccess(Mage::helper('profileolabs_shoppingflux')->__("Log is empty."));
-		
-		$this->_redirect('*/*/index');
-			
-	}
-	
-	public function gridAction()
-	{
-		$this->getResponse()->setBody(
-		$this->getLayout()->createBlock('profileolabs_shoppingflux/manageorders_adminhtml_log_grid')->toHtml()
-		);
-		
-		return $this;
-	}
-         protected function _isAllowed()
+    /**
+     * @return $this
+     */
+    protected function _initAction()
     {
-        return Mage::getSingleton('admin/session')->isAllowed('shoppingflux/manageorders');
+        /** @var Profileolabs_Shoppingflux_Helper_Data $helper */
+        $helper = Mage::helper('profileolabs_shoppingflux');
+
+        $this->loadLayout()
+            ->_setActiveMenu('shoppingflux/manageorders/log')
+            ->_addBreadcrumb($helper->__('ShoppingFlux orders log'), $helper->__('ShoppingFlux orders log'));
+
+        return $this;
     }
-	
+
+    public function indexAction()
+    {
+        $this->_initAction()->renderLayout();
+    }
+
+    public function deleteAction()
+    {
+        /** @var Profileolabs_Shoppingflux_Model_Mysql4_Manageorders_Log_Collection $collection */
+        $collection = Mage::getResourceModel('profileolabs_shoppingflux/manageorders_log_collection');
+
+        /** @var Profileolabs_Shoppingflux_Model_Manageorders_Log $log */
+        foreach ($collection as $log) {
+            $log->delete();
+        }
+
+        /** @var Profileolabs_Shoppingflux_Helper_Data $helper */
+        $helper = Mage::helper('profileolabs_shoppingflux');
+        $this->_getSession()->addSuccess($helper->__('Log is empty.'));
+        $this->_redirect('*/*/index');
+
+    }
+
+    public function gridAction()
+    {
+        /** @var Profileolabs_Shoppingflux_Block_Manageorders_Adminhtml_Log_Grid $gridBlock */
+        $gridBlock = $this->getLayout()->createBlock('profileolabs_shoppingflux/manageorders_adminhtml_log_grid');
+        $this->getResponse()->setBody($gridBlock->toHtml());
+    }
+
+    protected function _isAllowed()
+    {
+        /** @var Mage_Admin_Model_Session $session */
+        $session = Mage::getSingleton('admin/session');
+        return $session->isAllowed('shoppingflux/manageorders');
+    }
 }

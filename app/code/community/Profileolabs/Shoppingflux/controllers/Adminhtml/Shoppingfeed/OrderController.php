@@ -1,61 +1,54 @@
 <?php
-/**
- * Shopping Flux
- * @category   ShoppingFlux
- * @package    Profileolabs_Shoppingflux_ManageOrders
- * @author kassim belghait
- */
+
 class Profileolabs_Shoppingflux_Adminhtml_Shoppingfeed_OrderController extends Mage_Adminhtml_Controller_Action
 {
-	protected function _initAction() {
-		$this->loadLayout()
-		->_setActiveMenu('shoppingflux/manageorders/order')
-		->_addBreadcrumb(Mage::helper('profileolabs_shoppingflux')->__('ShoppingFlux orders'), Mage::helper('profileolabs_shoppingflux')->__('ShoppingFlux orders'));
-
-		return $this;
-	}
-	
-	
-	public function indexAction()
-	{
-		$this->_initAction()
-		->renderLayout();
-		
-		return $this;
-	}
-	
-	public function gridAction()
-	{
-		$this->getResponse()->setBody(
-		$this->getLayout()->createBlock('profileolabs_shoppingflux/manageorders_adminhtml_order_grid')->toHtml()
-		);
-		
-		return $this;
-	}
-	
- 	/**
-     * Export order grid to CSV format
+    /**
+     * @return $this
      */
-    public function exportCsvAction()
+    protected function _initAction()
     {
-        $fileName   = 'orders_shoppingflux.csv';
-        $grid       = $this->getLayout()->createBlock('profileolabs_shoppingflux/manageorders_adminhtml_order_grid');
-        $this->_prepareDownloadResponse($fileName, $grid->getCsvFile());
+        /** @var Profileolabs_Shoppingflux_Helper_Data $helper */
+        $helper = Mage::helper('profileolabs_shoppingflux');
+
+        $this->loadLayout()
+            ->_setActiveMenu('shoppingflux/manageorders/order')
+            ->_addBreadcrumb($helper->__('ShoppingFlux orders'), $helper->__('ShoppingFlux orders'));
+
+        return $this;
     }
 
     /**
-     *  Export order grid to Excel XML format
+     * @return Profileolabs_Shoppingflux_Block_Manageorders_Adminhtml_Order_Grid
      */
+    protected function _getOrdersGridBlock()
+    {
+        return $this->getLayout()->createBlock('profileolabs_shoppingflux/manageorders_adminhtml_order_grid');
+    }
+
+    public function indexAction()
+    {
+        $this->_initAction()->renderLayout();
+    }
+
+    public function gridAction()
+    {
+        $this->getResponse()->setBody($this->_getOrdersGridBlock()->toHtml());
+    }
+
+    public function exportCsvAction()
+    {
+        $this->_prepareDownloadResponse('orders_shoppingflux.csv', $this->_getOrdersGridBlock()->getCsvFile());
+    }
+
     public function exportExcelAction()
     {
-        $fileName   = 'orders_shoppingflux.xml';
-        $grid       = $this->getLayout()->createBlock('profileolabs_shoppingflux/manageorders_adminhtml_order_grid');
-        $this->_prepareDownloadResponse($fileName, $grid->getExcelFile($fileName));
+        $this->_prepareDownloadResponse('orders_shoppingflux.xml', $this->_getOrdersGridBlock()->getExcelFile());
     }
-	
-     protected function _isAllowed()
+
+    protected function _isAllowed()
     {
-        return Mage::getSingleton('admin/session')->isAllowed('shoppingflux/manageorders');
+        /** @var Mage_Admin_Model_Session $session */
+        $session = Mage::getSingleton('admin/session');
+        return $session->isAllowed('shoppingflux/manageorders');
     }
-	
 }

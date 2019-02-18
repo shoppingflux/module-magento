@@ -2,58 +2,10 @@
 <config>
     <modules>
         <Profileolabs_Shoppingflux>
-            <version>1.1.0</version>
+            <version>2.0.3</version>
         </Profileolabs_Shoppingflux>
     </modules>
-    <admin>
-        <routers>
-            <adminhtml>
-                <args>
-                    <modules>
-                        <shoppingflux after="Mage_Adminhtml">Profileolabs_Shoppingflux_Adminhtml</shoppingflux>
-                    </modules>
-                </args>
-            </adminhtml>
-        </routers>
-    </admin>
     <global>
-        <fieldsets>
-            <shoppingflux_convert_customer>
-                <LastName>
-                    <to_customer>lastname</to_customer>
-                    <to_customer_address>lastname</to_customer_address>
-                </LastName>
-                <FirstName>
-                    <to_customer>firstname</to_customer>
-                    <to_customer_address>firstname</to_customer_address>
-                </FirstName>
-                <Email>
-                    <to_customer>email</to_customer>
-                    <to_customer_address>email</to_customer_address>
-                </Email>
-                <Phone>
-                    <to_customer_address>telephone</to_customer_address>
-                </Phone>
-                <Company>
-                    <to_customer_address>company</to_customer_address>
-                </Company>
-                <PostalCode>
-                    <to_customer_address>postcode</to_customer_address>
-                </PostalCode>
-                <Town>
-                    <to_customer_address>city</to_customer_address>
-                </Town>
-                <Country>
-                    <to_customer_address>country_id</to_customer_address>
-                </Country>
-            </shoppingflux_convert_customer>
-            <sales_convert_order>
-                <fees_shoppingflux>
-                    <to_invoice>*</to_invoice>
-                    <to_cm>*</to_cm>
-                </fees_shoppingflux>
-            </sales_convert_order>
-        </fieldsets>
         <blocks>
             <profileolabs_shoppingflux>
                 <class>Profileolabs_Shoppingflux_Block</class>
@@ -68,7 +20,7 @@
             <profileolabs_shoppingflux>
                 <class>Profileolabs_Shoppingflux_Model</class>
                 <resourceModel>profileolabs_shoppingflux_mysql4</resourceModel>
-            </profileolabs_shoppingflux>		
+            </profileolabs_shoppingflux>
             <profileolabs_shoppingflux_mysql4>
                 <class>Profileolabs_Shoppingflux_Model_Mysql4</class>
                 <entities>
@@ -131,14 +83,51 @@
                 </connection>
             </profileolabs_shoppingflux_read>
         </resources>
+        <fieldsets>
+            <shoppingflux_convert_customer>
+                <LastName>
+                    <to_customer>lastname</to_customer>
+                    <to_customer_address>lastname</to_customer_address>
+                </LastName>
+                <FirstName>
+                    <to_customer>firstname</to_customer>
+                    <to_customer_address>firstname</to_customer_address>
+                </FirstName>
+                <Email>
+                    <to_customer>email</to_customer>
+                    <to_customer_address>email</to_customer_address>
+                </Email>
+                <Phone>
+                    <to_customer_address>telephone</to_customer_address>
+                </Phone>
+                <Company>
+                    <to_customer_address>company</to_customer_address>
+                </Company>
+                <PostalCode>
+                    <to_customer_address>postcode</to_customer_address>
+                </PostalCode>
+                <Town>
+                    <to_customer_address>city</to_customer_address>
+                </Town>
+                <Country>
+                    <to_customer_address>country_id</to_customer_address>
+                </Country>
+            </shoppingflux_convert_customer>
+            <sales_convert_order>
+                <fees_shoppingflux>
+                    <to_invoice>*</to_invoice>
+                    <to_cm>*</to_cm>
+                </fees_shoppingflux>
+            </sales_convert_order>
+        </fieldsets>
         <events>
             <cataloginventory_stock_item_save_after>
                 <observers>
-                    <sf_update_stock>
+                    <shoppingflux_update_stock>
                         <type>singleton</type>
                         <class>Profileolabs_Shoppingflux_Model_Export_Observer</class>
                         <method>realtimeUpdateStock</method>
-                    </sf_update_stock>
+                    </shoppingflux_update_stock>
                 </observers>
             </cataloginventory_stock_item_save_after>
             <customer_group_load_after>
@@ -181,14 +170,6 @@
                     </shoppingflux_catalog_product_save_commit_after>
                 </observers>
             </catalog_product_save_commit_after>
-            <catalogrule_after_apply>
-                <observers>
-                    <shoppingflux_catalogrule_after_apply>
-                        <class>Profileolabs_Shoppingflux_Model_Export_Observer</class>
-                        <method>catalogruleAfterApply</method>
-                    </shoppingflux_catalogrule_after_apply>
-                </observers>
-            </catalogrule_after_apply>
             <sales_order_place_after>
                 <observers>
                     <shoppingflux_sales_order_place_after>
@@ -220,8 +201,18 @@
             </totals>
         </pdf>
     </global>
+    <admin>
+        <routers>
+            <adminhtml>
+                <args>
+                    <modules>
+                        <shoppingflux after="Mage_Adminhtml">Profileolabs_Shoppingflux_Adminhtml</shoppingflux>
+                    </modules>
+                </args>
+            </adminhtml>
+        </routers>
+    </admin>
     <frontend>
-        
         <routers>
             <shoppingflux>
                 <use>standard</use>
@@ -231,21 +222,14 @@
                 </args>
             </shoppingflux>
         </routers>
-        <layout>
-            <updates>
-                <shoppingflux>
-                    <file>profileolabs_shoppingflux.xml</file>
-                </shoppingflux>
-            </updates>
-        </layout>
         <product>
             <collection>
                 <attributes>
                     <shoppingflux_product />
                     <shoppingflux_default_category />
                 </attributes>
-              </collection>
-          </product>
+            </collection>
+        </product>
         <translate>
             <modules>
                 <Profileolabs_Shoppingflux>
@@ -276,89 +260,81 @@
         <events>
             <catalog_product_delete_after_done>
                 <observers>
-                    <sf_delete_event>
+                    <shoppingflux_delete_event>
                         <type>singleton</type>
                         <class>Profileolabs_Shoppingflux_Model_Export_Observer</class>
                         <method>realtimeUpdateDeletedProduct</method>
-                    </sf_delete_event>
+                    </shoppingflux_delete_event>
                 </observers>
             </catalog_product_delete_after_done>
             <shoppingflux_mass_publish_save_item>
                 <observers>
-                    <sf_mass_insf_update>
+                    <shoppingflux_mass_update>
                         <type>singleton</type>
                         <class>Profileolabs_Shoppingflux_Model_Export_Observer</class>
                         <method>realtimeUpdateInSfMass</method>
-                    </sf_mass_insf_update>
+                    </shoppingflux_mass_update>
                 </observers>
             </shoppingflux_mass_publish_save_item>
             <catalog_product_save_after>
                 <observers>
-                    <sf_price_update>
+                    <shoppingflux_price_update>
                         <type>singleton</type>
                         <class>Profileolabs_Shoppingflux_Model_Export_Observer</class>
                         <method>realtimeUpdatePrice</method>
-                    </sf_price_update>
-                    <sf_insf_update>
+                    </shoppingflux_price_update>
+                    <shoppingflux_insf_update>
                         <type>singleton</type>
                         <class>Profileolabs_Shoppingflux_Model_Export_Observer</class>
                         <method>realtimeUpdateInSf</method>
-                    </sf_insf_update>
-                    <sf_disabled_update_save>
+                    </shoppingflux_insf_update>
+                    <shoppingflux_disabled_update_save>
                         <type>singleton</type>
                         <class>Profileolabs_Shoppingflux_Model_Export_Observer</class>
                         <method>realtimeUpdateDisabledProductSave</method>
-                    </sf_disabled_update_save>
+                    </shoppingflux_disabled_update_save>
                 </observers>
             </catalog_product_save_after>
             <catalog_product_status_update>
                 <observers>
-                    <sf_disabled_update>
+                    <shoppingflux_disabled_update>
                         <type>singleton</type>
                         <class>Profileolabs_Shoppingflux_Model_Export_Observer</class>
                         <method>realtimeUpdateDisabledProduct</method>
-                    </sf_disabled_update>
+                    </shoppingflux_disabled_update>
                 </observers>
             </catalog_product_status_update>
             <adminhtml_catalog_category_tabs>
                 <observers>
-                    <sf_adminhtml_catalog_category_tabs>
+                    <shoppingflux_adminhtml_catalog_category_tabs>
                         <type>singleton</type>
                         <class>profileolabs_shoppingflux/export_observer</class>
                         <method>addShoppingfluxProductsTab</method>
-                    </sf_adminhtml_catalog_category_tabs>
+                    </shoppingflux_adminhtml_catalog_category_tabs>
                 </observers>
             </adminhtml_catalog_category_tabs>
             <catalog_category_prepare_save>
                 <observers>
-                    <sf_catalog_category_prepare_save>
+                    <shoppingflux_catalog_category_prepare_save>
                         <type>singleton</type>
                         <class>profileolabs_shoppingflux/export_observer</class>
                         <method>saveShoppingfluxCategoryProducts</method>
-                    </sf_catalog_category_prepare_save>
+                    </shoppingflux_catalog_category_prepare_save>
                 </observers>
             </catalog_category_prepare_save>
             <adminhtml_block_html_before>
                 <observers>
-                    <sf_adminhtml_block_html_before>
+                    <shoppingflux_adminhtml_block_html_before>
                         <type>singleton</type>
                         <class>profileolabs_shoppingflux/manageorders_observer</class>
                         <method>observeAdminhtmlBlockHtmlBefore</method>
-                    </sf_adminhtml_block_html_before>
+                    </shoppingflux_adminhtml_block_html_before>
                 </observers>
             </adminhtml_block_html_before>
         </events>
     </adminhtml>
     <crontab>
         <jobs>
-            <!--<import_orders_shoppingflux>
-                <schedule>
-                    <cron_expr>*/30 * * * *</cron_expr>
-                </schedule>
-                <run>
-                    <model>profileolabs_shoppingflux/manageorders_observer::manageOrders</model>
-                </run>
-            </import_orders_shoppingflux>-->
             <export_updates_shoppingflux>
                 <schedule>
                     <cron_expr>20 * * * *</cron_expr>
@@ -399,22 +375,6 @@
                     <model>profileolabs_shoppingflux/export_observer::generateFluxInFile</model>
                 </run>
             </export_flux_in_file>
-            <!--<export_shipments_shoppingflux>
-                <schedule>
-                    <cron_expr>*/10 * * * *</cron_expr>
-                </schedule>
-                <run>
-                    <model>profileolabs_shoppingflux/manageorders_observer::sendScheduledShipments</model>
-                </run>
-            </export_shipments_shoppingflux>-->
-            <!--<export_updates_shoppingflux>
-                <schedule>
-                    <cron_expr>*/5 * * * *</cron_expr>
-                </schedule>
-                <run>
-                    <model>profileolabs_shoppingflux/export_observer::manageUpdates</model>
-                </run>
-            </export_updates_shoppingflux>-->
             <shoppingflux_refresh_not_salable_products>
                 <schedule>
                     <cron_expr>*/10 * * * *</cron_expr>
@@ -431,10 +391,7 @@
                 <is_sandbox>0</is_sandbox>
                 <ws_uri_test>http://test.shopping-flux.com/ws/</ws_uri_test>
                  <ws_uri_prod>http://ws.shopping-flux.com</ws_uri_prod>
-                <!--<ws_uri_prod>https://clients.shopping-flux.com/webservice/</ws_uri_prod>-->
-                <!--<ws_uri_prod>https://clients.shopping-flux.com/webservice/magento/</ws_uri_prod>-->
                 <api_key></api_key>
-                <!--<enable_buyline>0</enable_buyline>-->
             </configuration>
         </shoppingflux>
         <shoppingflux_mo>
@@ -447,6 +404,8 @@
                 <apply_tax>0</apply_tax>
                 <use_product_id>0</use_product_id>
                 <use_marketplace_date>1</use_marketplace_date>
+                <notify_update_connection_errors>1</notify_update_connection_errors>
+                <notify_update_api_errors>1</notify_update_api_errors>
             </manageorders>
             <shipment_update>
                 <limit_hours>1</limit_hours>

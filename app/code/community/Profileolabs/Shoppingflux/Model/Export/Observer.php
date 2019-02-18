@@ -1,288 +1,333 @@
 <?php
 
-/**
- * Shopping Flux Service
- * @category   ShoppingFlux
- * @package    Profileolabs_Shoppingflux
- * @author kassim belghait, vincent enjalbert @ web-cooking.net
- */
-class Profileolabs_Shoppingflux_Model_Export_Observer {
-
+class Profileolabs_Shoppingflux_Model_Export_Observer
+{
     /**
      * @return Profileolabs_Shoppingflux_Model_Config
      */
-    public function getConfig() {
+    public function getConfig()
+    {
         return Mage::getSingleton('profileolabs_shoppingflux/config');
     }
-    
-    public function catalogruleAfterApply($observer) {
-        return; //Disabled because it invalidate all the feed at each product / inventory save...
-        if(!$this->getConfig()->getManageCatalogRules()) {
-            return;
-        }
-        $write = Mage::getSingleton('core/resource')->getConnection('core_write');
-        $write->beginTransaction();
-        try {
-            $query = "update " . Mage::getSingleton('core/resource')->getTableName('profileolabs_shoppingflux/export_flux') . " set update_needed = 1 ";
-            $write->query($query);
-            $write->commit();
-        } catch (Exception $e) {
-            $write->rollback();
-        }     
+
+    /**
+     * @return Profileolabs_Shoppingflux_Helper_Data
+     */
+    public function getHelper()
+    {
+        return Mage::helper('profileolabs_shoppingflux');
     }
-    
-    
-    public static function checkStock($storeId = false) {
-        if(!$storeId || !is_numeric($storeId)) {
+
+    /**
+     * @return Profileolabs_Shoppingflux_Model_Export_Flux
+     */
+    public function getFluxModel()
+    {
+        return Mage::getSingleton('profileolabs_shoppingflux/export_flux');
+    }
+
+    /**
+     * @param int|false $storeId
+     */
+    public static function checkStock($storeId = false)
+    {
+        if (!$storeId || !is_numeric($storeId)) {
             $storeId = Mage::app()->getStore()->getId();
         }
-        $productCollection = Mage::getModel('catalog/product')->getCollection();
-        $productCollection->getSelect()->join(
-                    array('sf_stock' => $productCollection->getTable('cataloginventory/stock_item')), 'e.entity_id = sf_stock.product_id', array('qty', 'actual_qty'=>'qty')
-            );
-        $productCollection->getSelect()->join(
-                    array('flux' => $productCollection->getTable('profileolabs_shoppingflux/export_flux')), "e.entity_id = flux.product_id and flux.store_id = '".$storeId."'", array('stock_value', 'sku')
-            );
-        $productCollection->getSelect()->where('CAST(sf_stock.qty AS SIGNED) != flux.stock_value');
+
+        /** @var Mage_Catalog_Model_Resource_Product_Collection $productCollection */
+        $productCollection = Mage::getResourceModel('catalog/product_collection');
+
+        $select = $productCollection->getSelect();
+        $adapter = $select->getAdapter();
+
+        $select->join(
+            array('sf_stock' => $productCollection->getTable('cataloginventory/stock_item')),
+            'e.entity_id = sf_stock.product_id',
+            array('qty', 'actual_qty' => 'qty')
+        );
+
+        $select->join(
+            array('flux' => $productCollection->getTable('profileolabs_shoppingflux/export_flux')),
+            'e.entity_id = flux.product_id and flux.store_id = ' . $adapter->quote($storeId),
+            array('stock_value', 'sku')
+        );
+
+        $select->where('CAST(sf_stock.qty AS SIGNED) != flux.stock_value');
+
         if (Mage::getStoreConfigFlag(Mage_CatalogInventory_Model_Stock_Item::XML_PATH_MANAGE_STOCK, $storeId)) {
-            $productCollection->getSelect()->where('(sf_stock.use_config_manage_stock = 0 and sf_stock.manage_stock = 1) OR (sf_stock.use_config_manage_stock = 1)');
+            $select->where(
+                '(sf_stock.use_config_manage_stock = 0 and sf_stock.manage_stock = 1)'
+                . ' OR '
+                . '(sf_stock.use_config_manage_stock = 1)'
+            );
         } else {
-            $productCollection->getSelect()->where('(sf_stock.use_config_manage_stock = 0 and sf_stock.manage_stock = 1)');
+            $select->where(
+                '(sf_stock.use_config_manage_stock = 0 AND sf_stock.manage_stock = 1)'
+            );
         }
-        $productCollection->getSelect()->where('flux.update_needed = 0');
-        $productCollection->getSelect()->group('e.entity_id');
-        foreach($productCollection as $product) {
-            Mage::getModel('profileolabs_shoppingflux/export_flux')->productNeedUpdate($product);
+
+        $select->where('flux.update_needed = 0');
+        $select->group('e.entity_id');
+
+        /** @var Profileolabs_Shoppingflux_Model_Export_Flux $fluxModel */
+        $fluxModel = Mage::getModel('profileolabs_shoppingflux/export_flux');
+
+        foreach ($productCollection as $product) {
+            $fluxModel->productNeedUpdate($product);
         }
     }
-    
-    
 
-    public function updateFlux() {
-        if(Mage::getStoreConfigFlag('shoppingflux_export/general/enable_cron')) {
-            foreach(Mage::app()->getStores() as $store) {
-                $feedUrl = Mage::helper('profileolabs_shoppingflux')->getFeedUrl($store);
-                if($feedUrl) {
+    public function updateFlux()
+    {
+        $helper = $this->getHelper();
+
+        if (Mage::getStoreConfigFlag('shoppingflux_export/general/enable_cron')) {
+            foreach (Mage::app()->getStores() as $store) {
+                if ($feedUrl = $helper->getFeedUrl($store)) {
                     file_get_contents($feedUrl);
                 }
             }
         }
     }
 
-    
-    protected function generateFluxInFileForStore($storeId) {
-        $filePath = Mage::getBaseDir('media') . DS . 'shoppingflux_'.$storeId.'.xml';
+    /**
+     * @param int $storeId
+     */
+    protected function generateFluxInFileForStore($storeId)
+    {
+        $filePath = Mage::getBaseDir('media') . DS . 'shoppingflux_' . $storeId . '.xml';
         $handle = fopen($filePath, 'a');
         ftruncate($handle, 0);
 
-        //Mage::getModel('profileolabs_shoppingflux/export_flux')->updateFlux($storeId, 1000000);
-        $collection = Mage::getModel('profileolabs_shoppingflux/export_flux')->getCollection();
+        /** @var Profileolabs_Shoppingflux_Model_Mysql4_Export_Flux_Collection $collection */
+        $collection = Mage::getResourceModel('profileolabs_shoppingflux/export_flux_collection');
         $collection->addFieldToFilter('should_export', 1);
         $collection->addFieldToFilter('store_id', $storeId);
-        $sizeTotal = $collection->count();
+        $sizeTotal = $collection->getSize();
         $collection->clear();
         $withNotSalableRetention = $this->getConfig()->isNotSalableRetentionEnabled($storeId);
 
         if (!$this->getConfig()->isExportNotSalable($storeId) && !$withNotSalableRetention) {
             $collection->addFieldToFilter('salable', 1);
         }
+
         if (!$this->getConfig()->isExportSoldout($storeId) && !$withNotSalableRetention) {
             $collection->addFieldToFilter('is_in_stock', 1);
         }
+
         if ($this->getConfig()->isExportFilteredByAttribute($storeId)) {
             $collection->addFieldToFilter('is_in_flux', 1);
         }
+
         $visibilities = $this->getConfig()->getVisibilitiesToExport($storeId);
-        $collection->getSelect()->where("find_in_set(visibility, '" . implode(',', $visibilities) . "')");
+        $collection->getSelect()->where('FIND_IN_SET(visibility, ?)', implode(',', $visibilities));
 
+        /** @var Profileolabs_Shoppingflux_Model_Export_Xml $xmlObject */
+        $xmlObject = Mage::getModel('profileolabs_shoppingflux/export_xml');
 
+        $xmlStart = $xmlObject->startXml(
+            array(
+                'size-exportable' => $sizeTotal,
+                'size-xml' => $collection->getSize(),
+                'with-out-of-stock' => (int) $this->getConfig()->isExportSoldout(),
+                'with-not-salable' => (int) $this->getConfig()->isExportNotSalable(),
+                'selected-only' => (int) $this->getConfig()->isExportFilteredByAttribute(),
+                'visibilities' => implode(',', $visibilities),
+            )
+        );
 
-        $xmlObj = Mage::getModel('profileolabs_shoppingflux/export_xml');
-        $startXml = $xmlObj->startXml(array('size-exportable' => $sizeTotal, 'size-xml' => $collection->count(), 'with-out-of-stock' => intval($this->getConfig()->isExportSoldout()), 'with-not-salable'=> intval($this->getConfig()->isExportNotSalable()), 'selected-only' => intval($this->getConfig()->isExportFilteredByAttribute()), 'visibilities' => implode(',', $visibilities)));
-        fwrite($handle, $startXml);
-        Mage::getSingleton('core/resource_iterator')
-                ->walk($collection->getSelect(), array(array($this, 'saveProductXml')), array('handle'=>$handle));
-        $endXml = $xmlObj->endXml();
+        fwrite($handle, $xmlStart);
+
+        /** @var Mage_Core_Model_Resource_Iterator $iterator */
+        $iterator = Mage::getSingleton('core/resource_iterator');
+        $iterator->walk($collection->getSelect(), array(array($this, 'writeProductXml')), array('handle' => $handle));
+
+        $endXml = $xmlObject->endXml();
         fwrite($handle, $endXml);
         fclose($handle);
     }
-    
-    public function saveProductXml($args) {
+
+    /**
+     * @param array $args
+     */
+    public function writeProductXml(array $args)
+    {
         fwrite($args['handle'], $args['row']['xml']);
     }
-    
-    public function generateFluxInFile() {
-        //foreach(Mage::app()->getStores() as $store) {
-        //    $this->generateFluxInFileForStore($store->getId());
-        //}
+
+    public function generateFluxInFile()
+    {
         $this->generateFluxInFileForStore(Mage::app()->getDefaultStoreView()->getId());
     }
 
-
     /**
-     * Add shoppingflux product tab in category edit page
-     * @param $observer
+     * @param Varien_Event_Observer $observer
      */
-    public function addShoppingfluxProductsTab($observer) {
-        $tabs = $observer->getTabs();
-        $tabs->addTab('shoppingflux_products', array(
-            'label' => Mage::helper('catalog')->__('Shoppingflux Category Products'),
-            'content' => $tabs->getLayout()->createBlock(
-                    'profileolabs_shoppingflux/export_adminhtml_catalog_category_tab_default', 'shoppingflux.product.grid'
-            )->toHtml(),
-        ));
-    }
+    public function addShoppingfluxProductsTab($observer)
+    {
+        if (($tabs = $observer->getEvent()->getData('tabs'))
+            && ($tabs instanceof Mage_Adminhtml_Block_Widget_Tabs)
+        ) {
+            /** @var Profileolabs_Shoppingflux_Block_Export_Adminhtml_Catalog_Category_Tab_Default $productsTab */
+            $productsTab = $tabs->getLayout()->createBlock(
+                'profileolabs_shoppingflux/export_adminhtml_catalog_category_tab_default',
+                'shoppingflux.product.grid'
+            );
 
-    public function catalogProductAttributeUpdateBefore($observer) {
-        $productIds = $observer->getEvent()->getProductIds();
-        foreach ($productIds as $productId) {
-            Mage::getModel('profileolabs_shoppingflux/export_flux')->productNeedUpdate($productId);
+            $tabs->addTab(
+                'shoppingflux_products',
+                array(
+                    'label' => $this->getHelper()->__('Shoppingflux Category Products'),
+                    'content' => $productsTab->toHtml(),
+                )
+            );
         }
     }
 
-    public function catalogProductSaveCommitAfter($observer) {
-        $product = $observer->getEvent()->getProduct();
-        Mage::getModel('profileolabs_shoppingflux/export_flux')->productNeedUpdate($product->getId());
+    /**
+     * @param Varien_Event_Observer $observer
+     */
+    public function catalogProductAttributeUpdateBefore($observer)
+    {
+        if (is_array($productIds = $observer->getEvent()->getData('product_ids'))) {
+            foreach ($productIds as $productId) {
+                $this->getFluxModel()->productNeedUpdate($productId);
+            }
+        }
     }
 
     /**
-     * update default category for selected products
+     * @param Varien_Event_Observer $observer
      */
-    public function saveShoppingfluxCategoryProducts($observer) {
-        $category = $observer->getEvent()->getCategory();
-        $request = $observer->getEvent()->getRequest();
-        $postedProducts = $request->getParam('shoppingflux_category_products');
-        $storeId = intval($request->getParam('store', 0));
+    public function catalogProductSaveCommitAfter($observer)
+    {
+        if (($product = $observer->getEvent()->getData('product'))
+            && ($product instanceof Mage_Catalog_Model_Product)
+        ) {
+            $this->getFluxModel()->productNeedUpdate($product->getId());
+        }
+    }
 
-        /** @var Profileolabs_Shoppingflux_Helper_String $stringHelper */
-        $stringHelper = Mage::helper('profileolabs_shoppingflux/string');
-        $products = $stringHelper->parseQueryStr($postedProducts);
+    /**
+     * @param Varien_Event_Observer $observer
+     */
+    public function saveShoppingfluxCategoryProducts($observer)
+    {
+        if (($category = $observer->getEvent()->getData('category'))
+            && ($category instanceof Mage_Catalog_Model_Category)
+            && ($request = $observer->getEvent()->getData('request'))
+            && ($request instanceof Zend_Controller_Request_Http)
+        ) {
+            $postedProducts = $request->getParam('shoppingflux_category_products');
+            $storeId = (int) $request->getParam('store', 0);
 
-        if (isset($products['on']))
-            unset($products['on']);
-        $products = array_keys($products);
-        if (!empty($products)) {
-            $currentVersion = Mage::getVersion();
-            $product = Mage::getModel('catalog/product');
-            foreach ($products as $productId) {
+            /** @var Profileolabs_Shoppingflux_Helper_String $stringHelper */
+            $stringHelper = Mage::helper('profileolabs_shoppingflux/string');
+            $products = $stringHelper->parseQueryStr($postedProducts);
 
-                $product->setData(array());
-                $product->setStoreId($storeId)
+            if (isset($products['on'])) {
+                unset($products['on']);
+            }
+
+            $products = array_keys($products);
+
+            if (!empty($products)) {
+                $currentVersion = Mage::getVersion();
+                /** @var Mage_Catalog_Model_Product $product */
+                $product = Mage::getModel('catalog/product');
+                /** @var Mage_Catalog_Model_Product_Action $actionModel */
+                $actionModel = Mage::getSingleton('catalog/product_action');
+
+                foreach ($products as $productId) {
+                    $product->setData(array());
+
+                    $product->setStoreId($storeId)
                         ->load($productId)
                         ->setIsMassupdate(true)
                         ->setExcludeUrlRewrite(true);
 
-                if (!$product->getId()) {
-                    continue;
-                }
+                    if (!$product->getId()) {
+                        continue;
+                    }
 
-                $product->addData(array('shoppingflux_default_category' => $category->getId()));
-                $dataChanged = $product->dataHasChangedFor('shoppingflux_default_category');
+                    $product->addData(array('shoppingflux_default_category' => $category->getId()));
+                    $dataChanged = $product->dataHasChangedFor('shoppingflux_default_category');
 
-                if ($dataChanged) {
-                    if (version_compare($currentVersion, '1.4.0') < 0) { 
-                        $product->save();
-                    } else {
-                        //Note: we could use this directly, but it will put all updated products to "Need Update" even if no changes
-                        Mage::getSingleton('catalog/product_action')
-                            ->updateAttributes($products, array('shoppingflux_default_category' => $category->getId()), $storeId);
+                    if ($dataChanged) {
+                        if (version_compare($currentVersion, '1.4.0') < 0) {
+                            $product->save();
+                        } else {
+                            $actionModel->updateAttributes(
+                                $products,
+                                array('shoppingflux_default_category' => $category->getId()),
+                                $storeId
+                            );
+                        }
                     }
                 }
             }
         }
     }
-    
-    
+
     /**
-     * @deprecated Not used anymore. Caused problems and was not so helpfull..
+     * @param array $data
      */
-    public function fillMainCategory() {
-        $productCollection = Mage::getModel('catalog/product')->getCollection();
-        $productCollection->addAttributeToSelect('shoppingflux_default_category', 'left');
-        $productCollection->addAttributeToFilter('shoppingflux_default_category', array(array('null'=>true), array('eq'=>'')));
-        foreach($productCollection as $product) {
-            $categories = $product->getCategoryIds();
-            if(!empty($categories)) {
-                shuffle($categories);
-                $categoryId = array_shift($categories);
-                Mage::getSingleton('catalog/product_action')
-                    ->updateAttributes(array($product->getId()), array('shoppingflux_default_category' => $categoryId), 0);
-            }
-        }
-    }
-
-    public function manageUpdates() {
-        $apiKeyManaged = array();
-        foreach (Mage::app()->getStores() as $store) {
-            $apiKey = $this->getConfig()->getApiKey($store->getId());
-            if (!$apiKey || in_array($apiKey, $apiKeyManaged))
-                continue;
-            $apiKeyManaged[] = $apiKey;
-
-
-            $updates = Mage::getModel('profileolabs_shoppingflux/export_updates')->getCollection();
-            $updates->addFieldToFilter('store_id', $store->getId());
-
-            $wsUri = $this->getConfig()->getWsUri();
-            $service = new Profileolabs_Shoppingflux_Model_Service($apiKey, $wsUri);
-            try {
-                $service->updateProducts($updates);
-                $updates->walk('delete');
-            } catch (Exception $e) {
-                
-            }
-        }
-    }
-
-    protected function _scheduleProductUpdate(array $data) {
-        /*         * REALTIME* */
+    protected function _scheduleProductUpdate(array $data)
+    {
         $object = new Varien_Object();
         $object->setData($data);
         $collection = new Varien_Data_Collection();
         $collection->addItem($object);
         $apiKey = $this->getConfig()->getApiKey($data['store_id']);
         $wsUri = $this->getConfig()->getWsUri();
+
         try {
             $service = new Profileolabs_Shoppingflux_Model_Service($apiKey, $wsUri);
             $service->updateProducts($collection);
-        } catch(Exception $e) {
-            
+        } catch (Exception $e) {
         }
-        /*         * SCHEDULED* */
-        /*
-          $data['updated_at'] = date('Y-m-d H:i:s');
-          $updates = Mage::getModel('profileolabs_shoppingflux/export_updates');
-          $updates->loadWithData($data);
-          foreach ($data as $k => $v)
-          $updates->setData($k, $v);
-          $updates->save();
-         * *
-         */
     }
 
     /**
-     * @param mixed $product product id, or Mage_Catalog_Model_Product
+     * @param int $productId
+     * @param array $forceData
      */
-    protected function _scheduleProductUpdates($product, array $forceData = array()) {
-        if ($product) {
-            if (is_numeric($product))
-                $product = Mage::getModel('catalog/product')->load($product);
-            $productStoresIds = $product->getStoreIds();
-            $apiKeyManaged = array();
-            foreach ($productStoresIds as $storeId) {
-                $apiKey = $this->getConfig()->getApiKey($storeId);
-                if (!$apiKey || in_array($apiKey, $apiKeyManaged))
-                    continue;
-                $apiKeyManaged[] = $apiKey;
-                $storeProduct = Mage::getModel('catalog/product')->setStoreId($storeId)->load($product->getId());
+    protected function _scheduleProductUpdates($productId, array $forceData = array())
+    {
+        if ($productId) {
+            /** @var Mage_Catalog_Model_Product $product */
+            $product = Mage::getModel('catalog/product');
+            $product->load($productId);
+            $productStoreIds = $product->getStoreIds();
+            $handledApiKeys = array();
 
-                $stock = $storeProduct->getStockItem()->getQty();
-                if ($this->getConfig()->isExportFilteredByAttribute($storeId) && $storeProduct->getData('shoppingflux_product') != 1) {
+            foreach ($productStoreIds as $storeId) {
+                $apiKey = $this->getConfig()->getApiKey($storeId);
+
+                if (!$apiKey || in_array($apiKey, $handledApiKeys)) {
+                    continue;
+                }
+
+                $handledApiKeys[] = $apiKey;
+
+                /** @var Mage_Catalog_Model_Product $storeProduct */
+                $storeProduct = Mage::getModel('catalog/product');
+                $storeProduct->setStoreId($storeId);
+                $storeProduct->load($product->getId());
+
+                /** @var Mage_CatalogInventory_Model_Stock_Item $stockItem */
+                $stockItem = $storeProduct->getStockItem();
+                $stock = $stockItem->getQty();
+
+                if (!$storeProduct->getData('shoppingflux_product')
+                    && $this->getConfig()->isExportFilteredByAttribute($storeId)
+                ) {
+                    $stock = 0;
+                } elseif ($storeProduct->getStatus() != Mage_Catalog_Model_Product_Status::STATUS_ENABLED) {
                     $stock = 0;
                 }
-                if ($storeProduct->getStatus() != 1) {
-                    $stock = 0;
-                }
+
                 $data = array(
                     'store_id' => $storeId,
                     'product_sku' => $storeProduct->getSku(),
@@ -290,160 +335,196 @@ class Profileolabs_Shoppingflux_Model_Export_Observer {
                     'price_value' => $storeProduct->getFinalPrice(),
                     'old_price_value' => $storeProduct->getPrice()
                 );
-                foreach ($forceData as $key => $val) {
-                    $data[$key] = $val;
+
+                foreach ($forceData as $key => $value) {
+                    $data[$key] = $value;
                 }
+
                 $this->_scheduleProductUpdate($data);
             }
         }
     }
 
     /**
-     * cataloginventory_stock_item_save_after (adminhtml,frontend)
-     * @param type $observer
+     * @param Varien_Event_Observer $observer
      */
-    public function realtimeUpdateStock($observer) {
-        Mage::getModel('profileolabs_shoppingflux/export_flux')->productNeedUpdate($observer->getItem()->getProductId());
-        if (!$this->getConfig()->isSyncEnabled())
+    public function realtimeUpdateStock($observer)
+    {
+        /** @var Mage_CatalogInventory_Model_Stock_Item $item */
+        if ($item = $observer->getEvent()->getData('item')) {
+            $this->getFluxModel()->productNeedUpdate($item->getProductId());
+
+            if (!$this->getConfig()->isSyncEnabled()) {
+                return;
+            }
+
+            $oldStock = (int) $item->getOrigData('qty');
+            $newStock = (int) $item->getData('qty');
+
+            if ($oldStock != $newStock) {
+                $productId = $item->getProductId();
+                $this->_scheduleProductUpdates($productId);
+            }
+        }
+    }
+
+    /**
+     * @param Varien_Event_Observer $observer
+     */
+    public function realtimeUpdatePrice($observer)
+    {
+        if (($product = $observer->getEvent()->getData('product'))
+            && ($product instanceof Mage_Catalog_Model_Product)
+        ) {
+            $fluxModel = $this->getFluxModel();
+
+            if ($product->getSku() != $product->getOrigData('sku')) {
+                $fluxModel->updateProductInFluxForAllStores($product->getOrigData('sku'));
+                $fluxModel->updateProductInFluxForAllStores($product->getSku());
+            }
+
+            $fluxModel->productNeedUpdate($product);
+
+            if (!$this->getConfig()->isSyncEnabled()) {
+                return;
+            }
+
+            $storeId = $product->getStoreId();
+            $checkableAttributes = array(
+                'price',
+                'tax_class_id',
+                'special_price',
+                'special_to_date',
+                'special_from_date'
+            );
+
+            $anyPriceChanged = false;
+
+            foreach ($checkableAttributes as $attributeCode) {
+                if ($product->getData($attributeCode) != $product->getOrigData($attributeCode)) {
+                    $anyPriceChanged = true;
+                    break;
+                }
+            }
+
+            if ($anyPriceChanged) {
+                if ($storeId == 0) {
+                    $this->_scheduleProductUpdates($product->getId());
+                } else {
+                    $this->_scheduleProductUpdate(
+                        array(
+                            'store_id' => $storeId,
+                            'product_sku' => $product->getSku(),
+                            'stock_value' => $product->getStockItem()->getQty(),
+                            'price_value' => $product->getFinalPrice(),
+                            'old_price_value' => $product->getPrice()
+                        )
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * @param Varien_Event_Observer $observer
+     */
+    public function realtimeUpdateDeletedProduct($observer)
+    {
+        if (!$this->getConfig()->isSyncEnabled()) {
             return;
+        }
 
-        $oldStock = (int) $observer->getItem()->getOrigData('qty');
-        $newStock = (int) $observer->getItem()->getData('qty');
-        if ($oldStock != $newStock) {
+        if (($product = $observer->getEvent()->getData('product'))
+            && ($product instanceof Mage_Catalog_Model_Product)
+        ) {
+            $handledApiKeys = array();
 
-            //Mage::log('realtimeUpdateStock');
-            $productId = $observer->getItem()->getProductId();
+            /** @var Mage_Core_Model_Store $store */
+            foreach (Mage::app()->getStores() as $store) {
+                $apiKey = $this->getConfig()->getApiKey($store->getId());
+
+                if (!$apiKey || in_array($apiKey, $handledApiKeys)) {
+                    continue;
+                }
+
+                $this->_scheduleProductUpdate(
+                    array(
+                        'store_id' => $store->getId(),
+                        'product_sku' => $product->getSku(),
+                        'stock_value' => 0,
+                        'price_value' => $product->getPrice(),
+                        'old_price_value' => $product->getPrice()
+                    )
+                );
+            }
+        }
+    }
+
+    /**
+     * @param Varien_Event_Observer $observer
+     */
+    public function realtimeUpdateDisabledProduct($observer)
+    {
+        if ($productId = $observer->getEvent()->getData('product_id')) {
+            $this->getFluxModel()->productNeedUpdate($productId);
+
+            if (!$this->getConfig()->isSyncEnabled()) {
+                return;
+            }
+
             $this->_scheduleProductUpdates($productId);
         }
     }
 
     /**
-     * catalog_product_save_after (adminhtml)
-     * @param type $observer
+     * @param Varien_Event_Observer $observer
      */
-    public function realtimeUpdatePrice($observer) {
-        if ($observer->getProduct()->getSku() != $observer->getProduct()->getOrigData('sku')) {
-            Mage::getModel('profileolabs_shoppingflux/export_flux')->updateProductInFluxForAllStores($observer->getProduct()->getOrigData('sku'));
-            Mage::getModel('profileolabs_shoppingflux/export_flux')->updateProductInFluxForAllStores($observer->getProduct()->getSku());
-        }
-        Mage::getModel('profileolabs_shoppingflux/export_flux')->productNeedUpdate($observer->getProduct());
-
-
-        if (!$this->getConfig()->isSyncEnabled())
+    public function realtimeUpdateDisabledProductSave($observer)
+    {
+        if (!$this->getConfig()->isSyncEnabled()) {
             return;
+        }
 
-        $product = $observer->getProduct();
-        $storeId = $product->getStoreId();
-        $attributesToCheck = array('price', 'tax_class_id', 'special_price', 'special_to_date', 'special_from_date');
-      
-        $somePriceChanged = false;
-        foreach ($attributesToCheck as $attributeCode) {
-            if ($product->getData($attributeCode) != $product->getOrigData($attributeCode)) {
-                $somePriceChanged = true;
+        if (($product = $observer->getEvent()->getData('product'))
+            && ($product instanceof Mage_Catalog_Model_Product)
+            && ($product->getStatus() != $product->getOrigData('status'))
+        ) {
+            $this->_scheduleProductUpdates($product->getId());
+        }
+    }
+
+    /**
+     * @param Varien_Event_Observer $observer
+     */
+    public function realtimeUpdateInSf($observer)
+    {
+        if (!$this->getConfig()->isSyncEnabled()) {
+            return;
+        }
+        if (($product = $observer->getEvent()->getData('product'))
+            && ($product instanceof Mage_Catalog_Model_Product)
+            && !$product->getData('shoppingflux_product')
+            && $product->getOrigData('shoppingflux_product') == 1
+        ) {
+            $this->_scheduleProductUpdates($product->getId(), array('stock_value' => 0));
+        }
+    }
+
+    /**
+     * @param Varien_Event_Observer $observer
+     */
+    public function realtimeUpdateInSfMass($observer)
+    {
+        if ($productId = $observer->getEvent()->getData('product_id')) {
+            $this->getFluxModel()->productNeedUpdate($productId);
+
+            if (!$this->getConfig()->isSyncEnabled()) {
+                return;
             }
-        }
 
-        if ($somePriceChanged) {
-            //Mage::log('realtimeUpdatePrice');
-            if ($storeId == 0) { // update for all stores
-                $this->_scheduleProductUpdates($product);
-            } else { // change happened in one store, update only this one
-                $stock = $product->getStockItem()->getQty();
-                $this->_scheduleProductUpdate(array(
-                    'store_id' => $storeId,
-                    'product_sku' => $product->getSku(),
-                    'stock_value' => $stock,
-                    'price_value' => $product->getFinalPrice(),
-                    'old_price_value' => $product->getPrice()
-                ));
+            if (!$observer->getEvent()->getData('shoppingflux_product')) {
+                $this->_scheduleProductUpdates($productId, array('stock_value' => 0));
             }
-        }
-    }
-
-    /**
-     * catalog_product_save_after (adminhtml)
-     * @param type $observer
-     */
-    public function realtimeUpdateDeletedProduct($observer) {
-        if (!$this->getConfig()->isSyncEnabled())
-            return;
-
-        $product = $observer->getProduct();
-        $apiKeyManaged = array();
-        foreach (Mage::app()->getStores() as $store) {
-            $apiKey = $this->getConfig()->getApiKey($store->getId());
-            if (!$apiKey || in_array($apiKey, $apiKeyManaged))
-                continue;
-            $apiKeyManaged[] = $apiKey;
-            //Mage::log('realtimeUpdateDeletedProduct');
-
-            $this->_scheduleProductUpdate(array(
-                'store_id' => $store->getId(),
-                'product_sku' => $product->getSku(),
-                'stock_value' => 0,
-                'price_value' => $product->getPrice(),
-                'old_price_value' => $product->getPrice()
-            ));
-        }
-    }
-
-    /**
-     * catalog_product_status_update (adminhtml)
-     * @param type $observer
-     */
-    public function realtimeUpdateDisabledProduct($observer) {
-        Mage::getModel('profileolabs_shoppingflux/export_flux')->productNeedUpdate($observer->getProductId());
-        if (!$this->getConfig()->isSyncEnabled())
-            return;
-
-        //Mage::log('realtimeUpdateDisabledProduct');
-        $this->_scheduleProductUpdates($observer->getProductId());
-    }
-
-    /**
-     * catalog_product_save_after (adminhtml)
-     * @param type $observer
-     */
-    public function realtimeUpdateDisabledProductSave($observer) {
-        if (!$this->getConfig()->isSyncEnabled())
-            return;
-
-        $product = $observer->getProduct();
-        if ($product->getStatus() != $product->getOrigData('status')) {
-            //Mage::log('realtimeUpdateDisabledProductSave');
-            $this->_scheduleProductUpdates($product);
-        }
-    }
-
-    /**
-     * catalog_product_save_after (adminhtml)
-     * @param type $observer
-     */
-    public function realtimeUpdateInSf($observer) {
-        if (!$this->getConfig()->isSyncEnabled())
-            return;
-
-        $product = $observer->getProduct();
-        if ($product->getData('shoppingflux_product') != 1 && $product->getOrigData('shoppingflux_product') == 1) {
-            //Mage::log('realtimeUpdateInSf');
-            $this->_scheduleProductUpdates($product, array('stock_value' => 0));
-        }
-    }
-
-    /**
-     * shoppingflux_mass_publish_save_item (adminhtml)
-     * @param type $observer
-     */
-    public function realtimeUpdateInSfMass($observer) {
-        Mage::getModel('profileolabs_shoppingflux/export_flux')->productNeedUpdate($observer->getProductId());
-        if (!$this->getConfig()->isSyncEnabled())
-            return;
-
-        $productId = $observer->getProductId();
-        $publish = $observer->getShoppingfluxProduct();
-        if ($publish != 1) {
-            //Mage::log('realtimeUpdateInSfMass');
-            $this->_scheduleProductUpdates($productId, array('stock_value' => 0));
         }
     }
 

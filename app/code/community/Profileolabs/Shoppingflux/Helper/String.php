@@ -23,14 +23,6 @@
  * @copyright  Copyright (c) 2006-2016 X.commerce, Inc. and affiliates (http://www.magento.com)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-
-/**
- * Shopping Flux String Helper
- *
- * @category   ShoppingFlux
- * @package    Profileolabs_Shoppingflux
- * @author     Shopping Feed
- */
 class Profileolabs_Shoppingflux_Helper_String extends Mage_Core_Helper_String
 {
     /**
@@ -74,6 +66,7 @@ class Profileolabs_Shoppingflux_Helper_String extends Mage_Core_Helper_String
         if (!$str || (strpos($str, '=') === false)) {
             return false;
         }
+
         return true;
     }
 
@@ -118,6 +111,7 @@ class Profileolabs_Shoppingflux_Helper_String extends Mage_Core_Helper_String
                 }
             }
         }
+
         return $baseArray;
     }
 

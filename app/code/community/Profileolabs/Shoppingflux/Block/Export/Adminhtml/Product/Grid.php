@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Shoppingflux grid products block
- *
- * @category   Profileolabs
- * @package    Profileolabs_Shoppingflux
- * @author kassim belghait kassim@profileo.com
- */
 class Profileolabs_Shoppingflux_Block_Export_Adminhtml_Product_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
 
@@ -22,6 +15,9 @@ class Profileolabs_Shoppingflux_Block_Export_Adminhtml_Product_Grid extends Mage
 
     }
 
+    /**
+     * @return Mage_Core_Model_Store
+     */
     protected function _getStore()
     {
         $storeId = (int) $this->getRequest()->getParam('store', 0);
@@ -31,187 +27,275 @@ class Profileolabs_Shoppingflux_Block_Export_Adminhtml_Product_Grid extends Mage
     protected function _prepareCollection()
     {
         $store = $this->_getStore();
-        $collection = Mage::getModel('profileolabs_shoppingflux/catalog_product_collection')
-            ->addAttributeToSelect('sku')
-            ->addAttributeToSelect('name')
-            ->addAttributeToSelect('attribute_set_id')
-            ->addAttributeToSelect('type_id')
-            ->joinField('qty',
-                'cataloginventory/stock_item',
-                'qty',
-                'product_id=entity_id',
-                '{{table}}.stock_id=1',
-                'left');
+
+        /** @var Profileolabs_Shoppingflux_Model_Catalog_Product_Collection $collection */
+        $collection = Mage::getModel('profileolabs_shoppingflux/catalog_product_collection');
+        $collection->addAttributeToSelect(array('sku', 'name', 'attribute_set_id', 'type_id'));
+
+        $collection->joinField(
+            'qty',
+            'cataloginventory/stock_item',
+            'qty',
+            'product_id=entity_id',
+            '{{table}}.stock_id=1',
+            'left'
+        );
 
         if ($store->getId()) {
             $collection->setStoreId($store->getId());
             $collection->addStoreFilter($store);
-            $collection->joinAttribute('shoppingflux_product', 'catalog_product/shoppingflux_product', 'entity_id', null, 'left', $store->getId());
-            $collection->joinAttribute('custom_name', 'catalog_product/name', 'entity_id', null, 'inner', $store->getId());
+
+            $collection->joinAttribute(
+                'shoppingflux_product',
+                'catalog_product/shoppingflux_product',
+                'entity_id',
+                null,
+                'left',
+                $store->getId()
+            );
+
+            $collection->joinAttribute(
+                'custom_name',
+                'catalog_product/name',
+                'entity_id',
+                null,
+                'inner',
+                $store->getId()
+            );
+
             $collection->joinAttribute('status', 'catalog_product/status', 'entity_id', null, 'inner', $store->getId());
-            $collection->joinAttribute('visibility', 'catalog_product/visibility', 'entity_id', null, 'inner', $store->getId());
+
+            $collection->joinAttribute(
+                'visibility',
+                'catalog_product/visibility',
+                'entity_id',
+                null,
+                'inner',
+                $store->getId()
+            );
+
             $collection->joinAttribute('price', 'catalog_product/price', 'entity_id', null, 'left', $store->getId());
+        } else {
+            $collection->addAttributeToSelect(array('price', 'status', 'visibility', 'shoppingflux_product'));
         }
-        else {
-            $collection->addAttributeToSelect('price');
-            $collection->addAttributeToSelect('status');
-            $collection->addAttributeToSelect('visibility');
-            $collection->addAttributeToSelect('shoppingflux_product');
-        }
-        
-        $collection->getSelect()->joinLeft(
-                array('category_product' => $collection->getTable('catalog/category_product')), 'category_product.product_id = e.entity_id', array('categories' => new Zend_Db_Expr('group_concat(category_product.category_id)'))
-        );
+
+        $collection->getSelect()
+            ->joinLeft(
+                array('category_product' => $collection->getTable('catalog/category_product')),
+                'category_product.product_id = e.entity_id',
+                array('categories' => new Zend_Db_Expr('group_concat(category_product.category_id)'))
+            );
 
         $collection->groupByAttribute('entity_id');
-        
-        $this->setCollection($collection);
 
+        $this->setCollection($collection);
         parent::_prepareCollection();
-        $this->getCollection()->addWebsiteNamesToResult();
+        $collection->addWebsiteNamesToResult();
+
         return $this;
     }
-    
+
     protected function _afterLoadCollection()
     {
-        foreach($this->getCollection() as $item) {
-            $item->setCategories(explode(',',$item->getCategories()));
+        foreach ($this->getCollection() as $item) {
+            $item->setCategories(explode(',', $item->getCategories()));
         }
     }
 
     protected function _addColumnFilterToCollection($column)
     {
-        if ($this->getCollection()) {
-            if ($column->getId() == 'websites') {
-                $this->getCollection()->joinField('websites',
+        /**
+         * @var Mage_Adminhtml_Block_Widget_Grid_Column $column
+         * @var Profileolabs_Shoppingflux_Model_Catalog_Product_Collection $collection
+         * */
+        if ($collection = $this->getCollection()) {
+            if ($column->getId() === 'websites') {
+                $collection->joinField(
+                    'websites',
                     'catalog/product_website',
                     'website_id',
                     'product_id=entity_id',
                     null,
-                    'left');
+                    'left'
+                );
             }
         }
+
         return parent::_addColumnFilterToCollection($column);
     }
 
     protected function _prepareColumns()
     {
-        $this->addColumn('entity_id',
+        /** @var Profileolabs_Shoppingflux_Helper_Data $helper */
+        $helper = Mage::helper('profileolabs_shoppingflux');
+
+        $this->addColumn(
+            'entity_id',
             array(
-                'header'=> Mage::helper('catalog')->__('ID'),
+                'header' => $helper->__('ID'),
                 'width' => '50px',
-                'type'  => 'number',
+                'type' => 'number',
                 'index' => 'entity_id',
-        ));
-        $this->addColumn('name',
+            )
+        );
+
+        $this->addColumn(
+            'name',
             array(
-                'header'=> Mage::helper('catalog')->__('Name'),
+                'header' => $helper->__('Name'),
                 'index' => 'name',
-        ));
+            )
+        );
 
         $store = $this->_getStore();
+
         if ($store->getId()) {
-            $this->addColumn('custom_name',
+            $this->addColumn(
+                'custom_name',
                 array(
-                    'header'=> Mage::helper('profileolabs_shoppingflux')->__('Name In %s', $store->getName()),
+                    'header' => $helper->__('Name In %s', $store->getName()),
                     'index' => 'custom_name',
-            ));
+                )
+            );
         }
 
-        $categories = Mage::helper('profileolabs_shoppingflux')->getCategoriesWithParents('name', Mage::app()->getRequest()->getParam('store', null));
-        $this->addColumn('categories',
+        $categories = $helper->getCategoriesWithParents(
+            'name',
+            Mage::app()
+                ->getRequest()
+                ->getParam('store', null)
+        );
+
+        $this->addColumn(
+            'categories',
             array(
-                'header'=> Mage::helper('catalog')->__('Categories'),
+                'header' => $helper->__('Categories'),
                 'index' => 'categories',
-                'type'  => 'options',
+                'type' => 'options',
                 'options' => $categories,
                 'filter_condition_callback' => array($this, '_filterCategoriesCondition')
-        ));
+            )
+        );
 
-        $this->addColumn('type',
+        /** @var Mage_Catalog_Model_Product_Type $typeModel */
+        $typeModel = Mage::getSingleton('catalog/product_type');
+
+        $this->addColumn(
+            'type',
             array(
-                'header'=> Mage::helper('catalog')->__('Type'),
+                'header' => $helper->__('Type'),
                 'width' => '60px',
                 'index' => 'type_id',
-                'type'  => 'options',
-                'options' => Mage::getSingleton('catalog/product_type')->getOptionArray(),
-        ));
+                'type' => 'options',
+                'options' => $typeModel->getOptionArray(),
+            )
+        );
 
-        $sets = Mage::getResourceModel('eav/entity_attribute_set_collection')
-            ->setEntityTypeFilter(Mage::getModel('catalog/product')->getResource()->getTypeId())
-            ->load()
-            ->toOptionHash();
+        /** @var Mage_Catalog_Model_Resource_Product $productResource */
+        $productResource = Mage::getResourceModel('catalog/product');
+        $productTypeId = $productResource->getTypeId();
 
-        $this->addColumn('set_name',
+        /** @var Mage_Eav_Model_Resource_Entity_Attribute_Set_Collection $sets */
+        $sets = Mage::getResourceModel('eav/entity_attribute_set_collection');
+        $sets->setEntityTypeFilter($productTypeId);
+        $sets->load();
+
+        $this->addColumn(
+            'set_name',
             array(
-                'header'=> Mage::helper('catalog')->__('Attrib. Set Name'),
+                'header' => $helper->__('Attrib. Set Name'),
                 'width' => '100px',
                 'index' => 'attribute_set_id',
-                'type'  => 'options',
-                'options' => $sets,
-        ));
+                'type' => 'options',
+                'options' => $sets->toOptionHash(),
+            )
+        );
 
-        $this->addColumn('sku',
+        $this->addColumn(
+            'sku',
             array(
-                'header'=> Mage::helper('catalog')->__('SKU'),
+                'header' => $helper->__('SKU'),
                 'width' => '80px',
                 'index' => 'sku',
-        ));
+            )
+        );
 
-        $store = $this->_getStore();
-        $this->addColumn('price',
+        $this->addColumn(
+            'price',
             array(
-                'header'=> Mage::helper('catalog')->__('Price'),
-                'type'  => 'price',
+                'header' => $helper->__('Price'),
+                'type' => 'price',
                 'currency_code' => $store->getBaseCurrency()->getCode(),
                 'index' => 'price',
-        ));
+            )
+        );
 
-        $this->addColumn('qty',
+        $this->addColumn(
+            'qty',
             array(
-                'header'=> Mage::helper('catalog')->__('Qty'),
+                'header' => $helper->__('Qty'),
                 'width' => '100px',
-                'type'  => 'number',
+                'type' => 'number',
                 'index' => 'qty',
-        ));
+            )
+        );
 
-        $this->addColumn('visibility',
+        /** @var Mage_Catalog_Model_Product_Visibility $visibilityModel */
+        $visibilityModel = Mage::getSingleton('catalog/product_visibility');
+
+        $this->addColumn(
+            'visibility',
             array(
-                'header'=> Mage::helper('catalog')->__('Visibility'),
+                'header' => $helper->__('Visibility'),
                 'width' => '70px',
                 'index' => 'visibility',
-                'type'  => 'options',
-                'options' => Mage::getModel('catalog/product_visibility')->getOptionArray(),
-        ));
+                'type' => 'options',
+                'options' => $visibilityModel->getOptionArray(),
+            )
+        );
 
-        $this->addColumn('status',
+        /** @var Mage_Catalog_Model_Product_Status $statusModel */
+        $statusModel = Mage::getSingleton('catalog/product_status');
+
+        $this->addColumn(
+            'status',
             array(
-                'header'=> Mage::helper('catalog')->__('Status'),
+                'header' => $helper->__('Status'),
                 'width' => '70px',
                 'index' => 'status',
-                'type'  => 'options',
-                'options' => Mage::getSingleton('catalog/product_status')->getOptionArray(),
-        ));
-        $optionsSf = array(0=>Mage::helper('profileolabs_shoppingflux')->__('No'),1=>Mage::helper('profileolabs_shoppingflux')->__('Yes'));
-        $this->addColumn('shoppingflux_product',
+                'type' => 'options',
+                'options' => $statusModel->getOptionArray(),
+            )
+        );
+
+        $yesNoOptions = array(
+            0 => $helper->__('No'),
+            1 => $helper->__('Yes'),
+        );
+
+        $this->addColumn(
+            'shoppingflux_product',
             array(
-                'header'=> Mage::helper('profileolabs_shoppingflux')->__('Send to Shoppingflux ?'),
+                'header' => $helper->__('Send to Shoppingflux ?'),
                 'width' => '70px',
                 'index' => 'shoppingflux_product',
-                'type'  => 'options',
-                'options' => $optionsSf,
-        ));
+                'type' => 'options',
+                'options' => $yesNoOptions,
+            )
+        );
 
         if (!Mage::app()->isSingleStoreMode()) {
-            $this->addColumn('websites',
+            $this->addColumn(
+                'websites',
                 array(
-                    'header'=> Mage::helper('catalog')->__('Websites'),
+                    'header' => $helper->__('Websites'),
                     'width' => '100px',
-                    'sortable'  => false,
-                    'index'     => 'websites',
-                    'type'      => 'options',
-                    'options'   => Mage::getModel('core/website')->getCollection()->toOptionHash(),
-            ));
+                    'sortable' => false,
+                    'index' => 'websites',
+                    'type' => 'options',
+                    'options' => Mage::getModel('core/website')->getCollection()->toOptionHash(),
+                )
+            );
         }
 
         return parent::_prepareColumns();
@@ -219,42 +303,51 @@ class Profileolabs_Shoppingflux_Block_Export_Adminhtml_Product_Grid extends Mage
 
     protected function _prepareMassaction()
     {
+        /** @var Profileolabs_Shoppingflux_Helper_Data $helper */
+        $helper = Mage::helper('profileolabs_shoppingflux');
+
         $this->setMassactionIdField('entity_id');
         $this->getMassactionBlock()->setFormFieldName('product');
 
-		$optionsSf = array(0=>"Non",1=>"Oui");
-        $this->getMassactionBlock()->addItem('publish', array(
-             'label'=> Mage::helper('profileolabs_shoppingflux')->__('Change publication'),
-             'url'  => $this->getUrl('*/*/massPublish', array('_current'=>true)),
-             'additional' => array(
+        $yesNoOptions = array(
+            0 => $helper->__('No'),
+            1 => $helper->__('Yes'),
+        );
+
+        $this->getMassactionBlock()->addItem(
+            'publish',
+            array(
+                'label' => $helper->__('Change publication'),
+                'url' => $this->getUrl('*/*/massPublish', array('_current' => true)),
+                'additional' => array(
                     'visibility' => array(
-                         'name' => 'publish',
-                         'type' => 'select',
-                         'class' => 'required-entry',
-                         'label' => Mage::helper('profileolabs_shoppingflux')->__('Publication'),
-                         'values' => $optionsSf
-                     )
-             )
-        ));
+                        'name' => 'publish',
+                        'type' => 'select',
+                        'class' => 'required-entry',
+                        'label' => $helper->__('Publication'),
+                        'values' => $yesNoOptions,
+                    )
+                )
+            )
+        );
 
         return $this;
     }
 
     public function getGridUrl()
     {
-        return $this->getUrl('*/*/grid', array('_current'=>true));
+        return $this->getUrl('*/*/grid', array('_current' => true));
     }
 
     public function getRowUrl($row)
     {
         return '';
     }
-    
-    protected function _filterCategoriesCondition($collection, $column) {
-        if (!$value = $column->getFilter()->getValue()) {
-            return;
-        }
 
-        $this->getCollection()->getSelect()->where('category_product.category_id = ?',  $value);
+    protected function _filterCategoriesCondition($collection, $column)
+    {
+        if ($value = $column->getFilter()->getValue()) {
+            $collection->getSelect()->where('category_product.category_id = ?', $value);
+        }
     }
 }

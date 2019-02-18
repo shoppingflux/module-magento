@@ -5,38 +5,34 @@
              <action method="addCss"><name>css/shoppingflux.css</name></action>
         </reference>
         <reference name="notifications">
-            <block type="profileolabs_shoppingflux/adminhtml_register_notification" name="notification.shoppingfeed" template="profileolabs/shoppingflux/register/notification.phtml"></block>
+            <block type="profileolabs_shoppingflux/adminhtml_register_notification" name="notification.shoppingfeed" template="profileolabs/shoppingflux/register/notification.phtml" />
         </reference>
     </default>
+
     <adminhtml_shoppingfeed_order_index>
         <reference name="content">
-            <block type="profileolabs_shoppingflux/manageorders_adminhtml_order" name="manageorders.order.grid.container"></block>
+            <block type="profileolabs_shoppingflux/manageorders_adminhtml_order" name="manageorders.order.grid.container" />
         </reference>
     </adminhtml_shoppingfeed_order_index>
+
     <adminhtml_shoppingfeed_order_log_index>
         <reference name="content">
-            <block type="profileolabs_shoppingflux/manageorders_adminhtml_log" name="manageorders.log.grid.container"></block>
+            <block type="profileolabs_shoppingflux/manageorders_adminhtml_log" name="manageorders.log.grid.container" />
         </reference>
     </adminhtml_shoppingfeed_order_log_index>
+
     <adminhtml_shoppingfeed_order_cron_index>
         <reference name="content">
-            <block type="profileolabs_shoppingflux/manageorders_adminhtml_cron" name="manageorders.cron.grid.container"></block>
+            <block type="profileolabs_shoppingflux/manageorders_adminhtml_cron" name="manageorders.cron.grid.container" />
         </reference>
     </adminhtml_shoppingfeed_order_cron_index>
+
      <adminhtml_shoppingfeed_order_import_index>
         <reference name="content">
-            <block type="profileolabs_shoppingflux/manageorders_adminhtml_import" name="manageorders.import" template="profileolabs/shoppingflux/manageorders/import.phtml"></block>
+            <block type="profileolabs_shoppingflux/manageorders_adminhtml_import" name="manageorders.import" template="profileolabs/shoppingflux/manageorders/import.phtml" />
         </reference>
     </adminhtml_shoppingfeed_order_import_index>
-    <adminhtml_shoppingfeed_export_edit>
-        <reference name="content">
-            <block type="adminhtml/template" name="export.edit" template="profileolabs/shoppingflux/export/edit.phtml">
-            	 <block type="adminhtml/store_switcher" name="store.switcher" >
-            	 	<action method="setUseConfirm">0</action>
-            	 </block>
-            </block>
-        </reference>
-    </adminhtml_shoppingfeed_export_edit>
+
     <adminhtml_shoppingfeed_export_update>
         <reference name="content">
             <block type="profileolabs_shoppingflux/export_adminhtml_product" name="products_list">
@@ -46,13 +42,13 @@
             </block>
         </reference>
     </adminhtml_shoppingfeed_export_update>
+
     <adminhtml_shoppingfeed_export_show>
         <reference name="content">
             <block type="profileolabs_shoppingflux/export_adminhtml_feed" name="feed_list" />
         </reference>
     </adminhtml_shoppingfeed_export_show>
-    
-    
+
      <adminhtml_sales_order_view>
         <reference name="sales_order_tabs">
             <action method="addTab">
@@ -61,17 +57,13 @@
             </action>
         </reference>
         <reference name="order_totals">
-            <block type="adminhtml/sales_order_totals_item" name="fees_shoppingflux" template="profileolabs/shoppingflux/manageorders/sales/order/total.phtml">
-            </block>
-            <!--<block type="adminhtml/sales_order_totals_item" name="simplebundle.refunded" template="webcooking/simplebundle/sales/order/refunded.phtml">
-                <action method="setDisplayArea"><area>footer</area></action>
-                <action method="setAfterCondition"><condition>last</condition></action>
-            </block>-->
+            <block type="adminhtml/sales_order_totals_item" name="fees_shoppingflux" template="profileolabs/shoppingflux/manageorders/sales/order/total.phtml" />
         </reference>
     </adminhtml_sales_order_view>
+
     <adminhtml_sales_order_invoice_view>
         <reference name="invoice_totals">
-            <block type="adminhtml/sales_order_totals_item" name="fees_shoppingflux" template="profileolabs/shoppingflux/manageorders/sales/order/invoice/total.phtml"></block>
+            <block type="adminhtml/sales_order_totals_item" name="fees_shoppingflux" template="profileolabs/shoppingflux/manageorders/sales/order/invoice/total.phtml" />
         </reference>
     </adminhtml_sales_order_invoice_view>
 </layout>

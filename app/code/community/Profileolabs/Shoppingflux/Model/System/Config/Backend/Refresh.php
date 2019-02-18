@@ -1,24 +1,17 @@
 <?php
 
-/**
- * @deprecated
- * Shopping Flux Backend Model for Config Api key
- * @category   ShoppingFlux
- * @package    Profileolabs_Shoppingflux
- * @author kassim belghait
- */
-class Profileolabs_Shoppingflux_Model_System_Config_Backend_Refresh extends Mage_Core_Model_Config_Data {
-
-    public function getConfig() {
+class Profileolabs_Shoppingflux_Model_System_Config_Backend_Refresh extends Mage_Core_Model_Config_Data
+{
+    public function getConfig()
+    {
         return Mage::getSingleton('profileolabs_shoppingflux/config');
     }
 
-    protected function _afterSave() {
+    protected function _afterSave()
+    {
         try {
             if ($this->isValueChanged()) {
-
                 $storeIds = array();
-
                 $storeId = Mage::app()->getStore($this->getStoreCode())->getId();
 
                 try {
@@ -31,22 +24,27 @@ class Profileolabs_Shoppingflux_Model_System_Config_Backend_Refresh extends Mage
                     $storeIds[] = $storeId;
                 } else if ($websiteId != 0) {
                     $stores = Mage::app()->getWebsite($this->getWebsiteCode())->getStores();
-                    foreach ($stores as $strId => $str) {
-                        $storeIds[] = $strId;
-                    }
+                    $storeIds = array_keys($stores);
                 } else {
                     $stores = Mage::app()->getStores();
-                    foreach ($stores as $strId => $str) {
-                        $storeIds[] = $strId;
-                    }
+                    $storeIds = array_keys($stores);
                 }
 
-                $write = Mage::getSingleton('core/resource')->getConnection('core_write');
-                foreach ($storeIds as $storeId) {
+                if (!empty($storeIds)) {
+                    /** @var Mage_Core_Model_Resource $resource */
+                    $resource = Mage::getSingleton('core/resource');
+                    $write = $resource->getConnection('core_write');
+                    $fluxTable = $resource->getTableName('profileolabs_shoppingflux/export_flux');
+
                     $write->beginTransaction();
+
                     try {
-                        $query = "update " . Mage::getSingleton('core/resource')->getTableName('profileolabs_shoppingflux/export_flux') . " set update_needed = 1 where store_id = '" . $storeId . "'";
-                        $write->query($query);
+                        $write->update(
+                            $fluxTable,
+                            array('update_needed' => 1),
+                            $write->quoteInto('store_id IN(?)', $storeIds)
+                        );
+
                         $write->commit();
                     } catch (Exception $e) {
                         $write->rollback();
@@ -54,8 +52,6 @@ class Profileolabs_Shoppingflux_Model_System_Config_Backend_Refresh extends Mage
                 }
             }
         } catch (Exception $e) {
-            
         }
     }
-
 }

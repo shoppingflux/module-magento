@@ -1,32 +1,32 @@
 <?php
 
-/* @var $installer Mage_Catalog_Model_Resource_Eav_Mysql4_Setup */
+/** @var Mage_Catalog_Model_Resource_Setup $installer */
 $installer = Mage::getResourceModel('catalog/setup', 'profileolabs_shoppingflux_setup');
 $installer->startSetup();
 
 $installer->run(
-"
-CREATE TABLE IF NOT EXISTS `{$installer->getTable('profileolabs_shoppingflux/not_salable_product')}` (
-`product_id` int(10) unsigned NOT NULL,
-`store_id` int(10) unsigned NOT NULL,
-`not_salable_from` timestamp NOT NULL default '0000-00-00 00:00:00',
-PRIMARY KEY (`product_id`),
-CONSTRAINT `FK_SHOPPINGFLUX_NOT_SALABLE_PRODUCT_PRODUCT` FOREIGN KEY (`product_id`)
-    REFERENCES `{$this->getTable('catalog/product')}` (`entity_id`) ON UPDATE CASCADE ON DELETE CASCADE,
-CONSTRAINT `FK_SHOPPINGFLUX_NOT_SALABLE_PRODUCT_STORE` FOREIGN KEY (`store_id`)
-    REFERENCES `{$this->getTable('core/store')}` (`store_id`) ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `{$installer->getTable('profileolabs_shoppingflux/updated_not_salable_product')}` (
-`product_id` int(10) unsigned NOT NULL,
-`store_id` int(10) unsigned NOT NULL,
-PRIMARY KEY (`product_id`, `store_id`),
-CONSTRAINT `FK_SHOPPINGFLUX_UPDATED_NOT_SALABLE_PRODUCT_NS_PRODUCT` FOREIGN KEY (`product_id`)
-    REFERENCES `{$this->getTable('profileolabs_shoppingflux/not_salable_product')}` (`product_id`) ON UPDATE CASCADE ON DELETE CASCADE,
-CONSTRAINT `FK_SHOPPINGFLUX_UPDATED_NOT_SALABLE_PRODUCT_STORE` FOREIGN KEY (`store_id`)
-    REFERENCES `{$this->getTable('core/store')}` (`store_id`) ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-"
+    "
+    CREATE TABLE IF NOT EXISTS `{$installer->getTable('profileolabs_shoppingflux/not_salable_product')}` (
+    `product_id` int(10) unsigned NOT NULL,
+    `store_id` int(10) unsigned NOT NULL,
+    `not_salable_from` timestamp NOT NULL default '0000-00-00 00:00:00',
+    PRIMARY KEY (`product_id`),
+    CONSTRAINT `FK_SHOPPINGFLUX_NOT_SALABLE_PRODUCT_PRODUCT` FOREIGN KEY (`product_id`)
+        REFERENCES `{$this->getTable('catalog/product')}` (`entity_id`) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT `FK_SHOPPINGFLUX_NOT_SALABLE_PRODUCT_STORE` FOREIGN KEY (`store_id`)
+        REFERENCES `{$this->getTable('core/store')}` (`store_id`) ON UPDATE CASCADE ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    
+    CREATE TABLE IF NOT EXISTS `{$installer->getTable('profileolabs_shoppingflux/updated_not_salable_product')}` (
+    `product_id` int(10) unsigned NOT NULL,
+    `store_id` int(10) unsigned NOT NULL,
+    PRIMARY KEY (`product_id`, `store_id`),
+    CONSTRAINT `FK_SHOPPINGFLUX_UPDATED_NOT_SALABLE_PRODUCT_NS_PRODUCT` FOREIGN KEY (`product_id`)
+        REFERENCES `{$this->getTable('profileolabs_shoppingflux/not_salable_product')}` (`product_id`) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT `FK_SHOPPINGFLUX_UPDATED_NOT_SALABLE_PRODUCT_STORE` FOREIGN KEY (`store_id`)
+        REFERENCES `{$this->getTable('core/store')}` (`store_id`) ON UPDATE CASCADE ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    "
 );
 
 

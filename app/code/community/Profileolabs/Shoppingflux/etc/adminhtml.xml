@@ -47,11 +47,6 @@
                     <sort_order>900</sort_order>
                     <action>adminhtml/shoppingfeed_order_cron</action>  
                 </crons>
-                <!--<test translate="title" module="profileolabs_shoppingflux">
-                    <title>test</title>
-                    <sort_order>900</sort_order>
-                    <action>adminhtml_shoppingfeed_general/test</action>  
-                </test>-->
             </children>
         </shoppingflux>
     </menu>

@@ -1,32 +1,32 @@
 <?php
 
-/**
- * Shopping Flux Service
- * @category   ShoppingFlux
- * @package    Profileolabs_Shoppingflux
- * @author vincent enjalbert @ web-cooking.net
- */
-class Profileolabs_Shoppingflux_Model_Export_Updates  extends Mage_Core_Model_Abstract {
-
-    protected function _construct() {
+class Profileolabs_Shoppingflux_Model_Export_Updates extends Mage_Core_Model_Abstract
+{
+    protected function _construct()
+    {
         $this->_init('profileolabs_shoppingflux/export_updates');
     }
 
-    public function loadWithData($data) {
-        if (!isset($data['product_sku']) || !isset($data['store_id']))
-            return;
-        $productSku = $data['product_sku'];
-        $storeId = $data['store_id'];
+    /**
+     * @param array $data
+     * @return $this
+     */
+    public function loadWithData(array $data)
+    {
+        if (!isset($data['product_sku']) || !isset($data['store_id'])) {
+            return $this;
+        }
 
         $collection = $this->getCollection();
-        $select = $collection->getSelect();
-        $select->where('product_sku = ?', $productSku);
-        $select->where('store_id = ?', $storeId);
-        $collection->load();
-        if ($collection->getSize() <= 0)
-            return;
-        $this->load($collection->getFirstItem()->getId());
-        return;
-    }
+        $collection->addFieldToFilter('product_sku', $data['product_sku']);
+        $collection->addFieldToFilter('store_id', $data['store_id']);
 
+        if ($collection->getSize() === 0) {
+            return $this;
+        }
+
+        $collection->setCurPage(1);
+        $collection->setPageSize(1);
+        return $this->load($collection->getFirstItem()->getId());
+    }
 }

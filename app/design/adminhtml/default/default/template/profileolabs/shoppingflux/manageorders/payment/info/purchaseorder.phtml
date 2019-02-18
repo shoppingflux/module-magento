@@ -24,5 +24,5 @@
  * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  */
 ?>
-<p><?php echo $this->__($this->getMethod()->getTitle()) ?></p>
-<p><?php echo $this->__('Marketplace: %s', $this->htmlEscape($this->getInfo()->getAdditionalData())) ?></p>
+<p><?php echo $this->htmlEscape($this->__($this->getMethod()->getTitle())) ?></p>
+<p><?php echo $this->htmlEscape($this->__('Marketplace: %s', $this->getInfo()->getAdditionalData())) ?></p>

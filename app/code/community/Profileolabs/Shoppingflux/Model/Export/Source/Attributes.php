@@ -1,13 +1,10 @@
 <?php
-/**
- * Shopping Flux
- * @category   ShoppingFlux
- * @package    Profileolabs_Shoppingflux
- * @author kassim belghait - Vincent Enjalbert
- */
+
 class Profileolabs_Shoppingflux_Model_Export_Source_Attributes
 {
-    
+    /**
+     * @var array
+     */
     protected $_exceptions = array(
         'store',
         'websites',
@@ -35,22 +32,30 @@ class Profileolabs_Shoppingflux_Model_Export_Source_Attributes
         'is_in_stock',
         'qty'
     );
-    
+
+    /**
+     * @var array|null
+     */
     protected $_attributes = null;
-    
+
+    /**
+     * @return array
+     */
     public function toOptionArray()
     {
-    	if(is_null($this->_attributes)) {
-	    	$this->_attributes = array();
-	        
-	    	$attributesArray= Mage::getSingleton('profileolabs_shoppingflux/export_convert_parser_product')->getExternalAttributes();
-	        foreach($attributesArray as $k=>$v) {
-	            if(!in_array($k, $this->_exceptions)) {
-	                $this->_attributes[] = array('value'=>$k, 'label'=>$v);
-	            }
-	        }
-	    	array_unshift($this->_attributes, array("value"=>"","label"=>""));
-    	}
-        return $this->_attributes;        
+        if ($this->_attributes === null) {
+            $this->_attributes = array(array('value' => '', 'label' => ''));
+
+            /** @var Profileolabs_Shoppingflux_Model_Export_Convert_Parser_Product $productParser */
+            $productParser = Mage::getSingleton('profileolabs_shoppingflux/export_convert_parser_product');
+
+            foreach ($productParser->getExternalAttributes() as $key => $value) {
+                if (!in_array($key, $this->_exceptions)) {
+                    $this->_attributes[] = array('value' => $key, 'label' => $value);
+                }
+            }
+        }
+
+        return $this->_attributes;
     }
 }
