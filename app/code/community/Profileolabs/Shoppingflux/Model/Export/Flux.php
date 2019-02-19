@@ -953,9 +953,11 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
             foreach ($categoryIds as $categoryId) {
                 if (isset($categories['name'][$categoryId])) {
                     $categoryNames = explode(' > ', $categories['name'][$categoryId]);
+                    $categoryLevel = count($categoryNames);
 
-                    if (count($categoryNames) > $chosenCategoryLevel) {
+                    if ($categoryLevel > $chosenCategoryLevel) {
                         $chosenCategoryId = $categoryId;
+                        $chosenCategoryLevel = $categoryLevel;
                     }
                 }
             }
