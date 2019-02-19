@@ -1306,7 +1306,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
 
                 $images = $this->getImages($images, $usedProduct, $storeId, false);
 
-                if (!$images['image-url-1']) {
+                if (!isset($images['image-url-1']) || !$images['image-url-1']) {
                     $images = $this->getImages($images, $product, $storeId);
                 }
 
