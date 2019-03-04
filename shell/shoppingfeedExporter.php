@@ -4,6 +4,21 @@ require_once('abstract.php');
 
 class Profileolabs_Shoppingflux_Shell_Feed_Exporter extends Mage_Shell_Abstract
 {
+    /**
+     * @var string|null
+     */
+    private $_message = null;
+
+    /**
+     * @param string $message
+     */
+    private function _stopWithMessage($message)
+    {
+        $this->_message = $message;
+        $this->_args['h'] = true;
+        $this->_showHelp();
+    }
+
     public function appendProductNode(array $args)
     {
         fwrite($args['file'], $args['row']['xml']);
@@ -14,15 +29,10 @@ class Profileolabs_Shoppingflux_Shell_Feed_Exporter extends Mage_Shell_Abstract
      */
     public function run()
     {
-        if ($this->getArg('help')) {
-            echo $this->usageHelp();
-            return;
-        }
-
         $storeId = (int) $this->getArg('store-id');
 
         if (empty($storeId)) {
-            echo 'The store ID for which to export the feed must be specified.' . "\n";
+            $this->_stopWithMessage('The store ID for which to export the feed must be specified.');
             return;
         }
 
@@ -50,8 +60,12 @@ class Profileolabs_Shoppingflux_Shell_Feed_Exporter extends Mage_Shell_Abstract
                 throw new Exception('The path is not writable or does not point to a directory.');
             }
         } catch (Exception $e) {
-            echo 'Could not initialize the "' . $feedFileDir . '" directory:' . "\n";
-            echo $e->getMessage() . "\n";
+            $this->_stopWithMessage(
+                'Could not initialize the "' . $feedFileDir . '" directory:'
+                . "\n"
+                . $e->getMessage()
+            );
+
             return;
         }
 
@@ -99,9 +113,7 @@ class Profileolabs_Shoppingflux_Shell_Feed_Exporter extends Mage_Shell_Abstract
         }
 
         if (!$this->getArg('no-update')) {
-            echo 'Updating refreshable products...' . "\n";
             $fluxModel->updateFlux($useAllStores ? false : $storeId, $maxImportLimit);
-            echo 'The refreshable products have been updated.' . "\n";
         }
 
         /** @var Profileolabs_Shoppingflux_Model_Mysql4_Export_Flux_Collection $collection */
@@ -159,11 +171,8 @@ class Profileolabs_Shoppingflux_Shell_Feed_Exporter extends Mage_Shell_Abstract
         $feedTempFile = fopen($feedTempFilePath, 'w');
 
         if (false === $feedTempFile) {
-            echo 'Could not open temporary export file "' . $feedTempFilePath . '".' . "\n";
-            return;
+            $this->_stopWithMessage('Could not open temporary export file "' . $feedTempFilePath . '".');
         }
-
-        echo 'Exporting the feed in "' . $feedTempFilePath . '"...' . "\n";
 
         fwrite($feedTempFile, $feedContent);
 
@@ -179,26 +188,24 @@ class Profileolabs_Shoppingflux_Shell_Feed_Exporter extends Mage_Shell_Abstract
 
             fwrite($feedTempFile, $xmlObject->endXml());
 
-            echo 'The feed has been successfully exported.' . "\n";
-
             if (false === rename($feedTempFilePath, $feedFilePath)) {
                 throw new Exception('Could not copy "' . $feedTempFilePath . '" to "' . $feedFilePath . '".');
             }
 
-            echo 'The feed has been successfully copied to "' . $feedFilePath . '".' . "\n";
-
-        } catch (Exception $e) {
-            echo 'Could not export the feed:' . "\n";
-            echo $e->getMessage() . "\n";
-        }
-
-        if (false !== $feedTempFile) {
             fclose($feedTempFile);
+            $this->_stopWithMessage('The feed has been successfully exported to "' . $feedFilePath . '".');
+        } catch (Exception $e) {
+            fclose($feedTempFile);
+            $this->_stopWithMessage('Could not export the feed:' . "\n" . $e->getMessage());
         }
     }
 
     public function usageHelp()
     {
+        if (null !== $this->_message) {
+            return $this->_message . "\n";
+        }
+
         return <<<USAGE
 Usage:  php -f shoppingfeedExporter.php -- [options]
 
