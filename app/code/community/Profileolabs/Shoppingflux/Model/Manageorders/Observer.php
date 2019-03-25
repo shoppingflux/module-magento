@@ -79,20 +79,32 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
     protected function _getShipmentTrackingUrl($shipmentTrack)
     {
         $trackingUrl = '';
+        $carrierCode = $shipmentTrack->getCarrierCode();
+        $trackingNumber = $shipmentTrack->getData('number');
 
-        if (preg_match('%^(owebia|(dpdfr)(classic|predict|relais))%i', $shipmentTrack->getCarrierCode(), $matches)
+        if (preg_match('%^(owebia|(dpdfr)(classic|predict|relais))%i', $carrierCode, $matches)
             && isset($this->_trackingUrlCallbacks[$matches[1]])
         ) {
             /** @var Mage_Shipping_Model_Config $shippingConfig */
             $shippingConfig = Mage::getSingleton('shipping/config');
-            $carrierInstance = $shippingConfig->getCarrierInstance($shipmentTrack->getCarrierCode());
+            $carrierInstance = $shippingConfig->getCarrierInstance($carrierCode);
 
             if ($carrierInstance
-                && ($trackingInfo = $carrierInstance->getTrackingInfo($shipmentTrack->getData('number')))
+                && ($trackingInfo = $carrierInstance->getTrackingInfo($trackingNumber))
                 && ($trackingInfo instanceof Varien_Object)
             ) {
                 $trackingUrl = call_user_func(array($this, $this->_trackingUrlCallbacks[$matches[1]]), $trackingInfo);
             }
+        } elseif ('fedex' === $carrierCode) {
+            $trackingUrl = 'https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=' . $trackingNumber;
+        } elseif ('ups' === $carrierCode) {
+            if (preg_match('%1Z[a-z0-9]{16}%i', $trackingNumber)) {
+                $trackingUrl = 'https://www.ups.com/track?tracknum=' . $trackingNumber . '/trackdetails';
+            }
+        } elseif ('usps' === $carrierCode) {
+            $trackingUrl = 'https://tools.usps.com/go/TrackConfirmAction_input?qtc_tLabels1=' . $trackingNumber;
+        } elseif ('dhl' === $carrierCode) {
+            $trackingUrl = 'http://www.dhl.com/en/express/tracking.html?AWB=' . $trackingNumber;
         }
 
         return $trackingUrl;
