@@ -1,0 +1,90 @@
+<?php /** @var Profileolabs_Shoppingflux_Block_Manageorders_Adminhtml_Order_Gsa_Shipment_Tracking_Scripts_Existing $this */ ?>
+<div style="display:none;"><?php echo $this->getCustomCarrierTitleSelectHtml() ?></div>
+<script type="text/javascript">
+(function () {
+    var trackableCarrierCodes = <?php echo Zend_Json::encode($this->getTrackableCarrierCodes()) ?>;
+    trackableCarrierCodes.push('custom');
+    var baseCarrierTitleSelectId = '<?php echo $this->jsQuoteEscape($this->getCustomCarrierTitleSelectId())  ?>';
+    var carrierTitleSelectVersion = 0;
+
+    function getCarrierSelect()  {
+        var carrierSelect = $$('#shipment_tracking_info select[name=carrier]').first();
+
+        if (!carrierSelect) {
+            carrierSelect = $$('select[name=carrier]').first();
+        }
+
+        return carrierSelect;
+    }
+
+    function getTrackingTitleInput() {
+        var titleInput = $$('#shipment_tracking_info input[name=title]').first();
+
+        if (!titleInput) {
+            titleInput = $('tracking_title');
+        }
+
+        return titleInput;
+    }
+
+    function getCarrierTitleSelect() {
+        var titleSelect = $(baseCarrierTitleSelectId + '-' + carrierTitleSelectVersion);
+
+        if (!titleSelect) {
+            ++carrierTitleSelectVersion;
+            var baseTitleSelect = $(baseCarrierTitleSelectId);
+            titleSelect = $(baseTitleSelect.cloneNode(true));
+            titleSelect.id = baseCarrierTitleSelectId + '-' + carrierTitleSelectVersion;
+        }
+
+        return titleSelect;
+    }
+
+    function updateCarrierSelect() {
+        var carrierSelect = getCarrierSelect();
+
+        if (carrierSelect) {
+            for (var i = 0, l = carrierSelect.options.length; i < l; i++) {
+                if (-1 === trackableCarrierCodes.indexOf(carrierSelect.options[i].value)) {
+                    carrierSelect.options[i] = null;
+                    i--;
+                    l--;
+                }
+            }
+
+            var titleInput = getTrackingTitleInput();
+            var titleSelect = getCarrierTitleSelect();
+
+            function synchronizeTitle() {
+                titleInput.value = $F(titleSelect);
+            }
+
+            titleSelect.stopObserving('change');
+            titleSelect.observe('change', synchronizeTitle);
+
+            if ($F(carrierSelect) === 'custom') {
+                synchronizeTitle();
+            }
+
+            function handleCarrierChange() {
+                if ($F(carrierSelect) === 'custom') {
+                    titleInput.insert({ after: titleSelect });
+                    titleInput.hide();
+                    titleSelect.show();
+                    synchronizeTitle();
+                } else {
+                    titleInput.show();
+                    titleSelect.hide();
+                }
+            }
+
+            carrierSelect.observe('change', handleCarrierChange);
+            handleCarrierChange();
+        }
+
+        Ajax.Responders.register({ onComplete: updateCarrierSelect });
+    }
+
+    updateCarrierSelect();
+})();
+</script>

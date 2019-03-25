@@ -492,4 +492,45 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
     {
         return $this->getConfigData('shoppingflux_mo/import_customer/mobile_attribute', $storeId);
     }
+
+    /**
+     * @param int|null $storeId
+     * @return array
+     */
+    public function getGsaCarrierMapping($storeId = null)
+    {
+        $dataKey = 'conf_gsa_carrier_mapping_' . (($storeId === null) ? '0' : $storeId);
+
+        if (!$this->hasData($dataKey)) {
+            /** @var Profileolabs_Shoppingflux_Helper_Sales $salesHelper */
+            $salesHelper = Mage::helper('profileolabs_shoppingflux/sales');
+            $trackableCarrierHash = $salesHelper->getTrackableCarriersOptionHash($storeId);
+            $gsaCarrierMapping = array();
+
+            foreach ($trackableCarrierHash as $mageCarrierCode => $title) {
+                $gsaCarrierCode = trim(
+                    $this->getConfigData('shoppingflux_mo/gsa_carrier_mapping/' . $mageCarrierCode, $storeId)
+                );
+
+                if ('' !== $gsaCarrierCode) {
+                    $gsaCarrierMapping[$mageCarrierCode] = $gsaCarrierCode;
+                }
+            }
+
+            $this->setData($dataKey, $gsaCarrierMapping);
+        }
+
+        return $this->_getData($dataKey);
+    }
+
+    /**
+     * @param string $mageCarrierCode
+     * @param int|null $storeId
+     * @return string|null
+     */
+    public function getMappedGsaCarrierCodeFor($mageCarrierCode, $storeId = null)
+    {
+        $mapping = $this->getGsaCarrierMapping($storeId);
+        return isset($mapping[$mageCarrierCode]) ? $mapping[$mageCarrierCode] : null;
+    }
 }

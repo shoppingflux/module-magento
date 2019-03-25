@@ -23,13 +23,26 @@ class Profileolabs_Shoppingflux_Block_Adminhtml_System_Config_Form_Fieldset_Abst
     }
 
     /**
+     * @return int|null
+     */
+    protected function _getStoreId()
+    {
+        $storeCode = Mage::app()->getRequest()->getParam('store', null);
+        
+        try {
+            $store = Mage::app()->getStore($storeCode);
+            return $store->getId();
+        } catch (Mage_Core_Model_Store_Exception $e) {
+            return Mage::app()->getStore()->getId();
+        }
+    }
+
+    /**
      * @return bool
      */
     public function shouldRenderUnregistered()
     {
-        $storeCode = Mage::app()->getRequest()->getParam('store', null);
-        $store = Mage::app()->getStore($storeCode);
-        $apiKey = $this->getConfig()->getApiKey($store->getId());
+        $apiKey = $this->getConfig()->getApiKey($this->_getStoreId());
         $wsUri = $this->getConfig()->getWsUri();
         $service = new Profileolabs_Shoppingflux_Model_Service($apiKey, $wsUri);
         return !$service->isClient();

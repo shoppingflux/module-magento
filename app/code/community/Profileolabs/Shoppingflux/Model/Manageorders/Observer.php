@@ -29,6 +29,14 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
     }
 
     /**
+     * @return Profileolabs_Shoppingflux_Helper_Sales
+     */
+    public function getSalesHelper()
+    {
+        return Mage::helper('profileolabs_shoppingflux/sales');
+    }
+
+    /**
      * @param Varien_Event_Observer $observer
      */
     public function setCustomerTaxClassId($observer)
@@ -96,18 +104,31 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
      */
     public function getShipmentTrackingNumber($shipment)
     {
+        $salesHelper = $this->getSalesHelper();
+        $storeId = $shipment->getStoreId();
         $result = false;
         $tracks = $shipment->getAllTracks();
 
-        if (is_array($tracks) && !empty($tracks)) {
-            $firstTrack = array_shift($tracks);
+        /** @var Mage_Sales_Model_Order_Shipment_Track $track */
+        foreach ($tracks as $track) {
+            if ('' !== trim($track->getData('number'))) {
+                $carrierCode = trim($track->getCarrierCode());
+                $trackTitle = $track->getData('title');
 
-            if (trim($firstTrack->getData('number'))) {
+                if (('custom' !== $carrierCode)
+                    && $salesHelper->isGoogleShoppingActionsOrder($shipment->getOrder())
+                    && ($gsaTrackTitle = $this->getConfig()->getMappedGsaCarrierCodeFor($carrierCode, $storeId))
+                ) {
+                    $trackTitle = $gsaTrackTitle;
+                }
+
                 $result = array(
-                    'trackUrl' => $this->_getShipmentTrackingUrl($firstTrack),
-                    'trackId' => $firstTrack->getData('number'),
-                    'trackTitle' => $firstTrack->getData('title'),
+                    'trackUrl' => $this->_getShipmentTrackingUrl($track),
+                    'trackId' => $track->getData('number'),
+                    'trackTitle' => $trackTitle,
                 );
+
+                break;
             }
         }
 

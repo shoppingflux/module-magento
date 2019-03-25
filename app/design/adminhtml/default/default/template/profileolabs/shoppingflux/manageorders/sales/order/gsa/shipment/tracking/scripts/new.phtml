@@ -1,0 +1,67 @@
+<?php /** @var Profileolabs_Shoppingflux_Block_Manageorders_Adminhtml_Order_Gsa_Shipment_Tracking_Scripts_New $this */ ?>
+<div style="display:none;"><?php echo $this->getCustomCarrierTitleSelectHtml() ?></div>
+<script type="text/javascript">
+    (function () {
+        var trackableCarrierCodes = <?php echo Zend_Json::encode($this->getTrackableCarrierCodes()) ?>;
+        trackableCarrierCodes.push('custom');
+        var baseCarrierTitleSelectId = '<?php echo $this->jsQuoteEscape($this->getCustomCarrierTitleSelectId())  ?>';
+        var originalAdd = trackingControl.add;
+        var originalOnChange = trackingControl.currierOnchange;
+
+        trackingControl.add = function () {
+            originalAdd.call(this);
+            var carrierSelect = $('trackingC' + this.index);
+
+            if (carrierSelect) {
+                for (var i = 0, l = carrierSelect.options.length; i < l; i++) {
+                    if (-1 === trackableCarrierCodes.indexOf(carrierSelect.options[i].value)) {
+                        carrierSelect.options[i] = null;
+                        i--;
+                        l--;
+                    }
+                }
+
+                this.currierOnchange(carrierSelect.fire('change'));
+            }
+        };
+
+        trackingControl.currierOnchange = function (event) {
+            var carrierSelect = Event.element(event);
+
+            if (!carrierSelect.id) {
+                return;
+            }
+
+            function getCarrierTitleSelect(carrierSelect) {
+                if (carrierSelect.titleSelect) {
+                    return carrierSelect.titleSelect;
+                }
+
+                var baseTitleSelect = $(baseCarrierTitleSelectId);
+                var titleSelect = $(baseTitleSelect.cloneNode(true));
+                titleSelect.id = '';
+
+                titleSelect.observe('change', function() {
+                    carrierSelect.valueInput.value = $F(titleSelect);
+                });
+
+                carrierSelect.valueInput.insert({ after: titleSelect });
+                carrierSelect.titleSelect = titleSelect;
+
+                return titleSelect;
+            }
+
+            var titleSelect = getCarrierTitleSelect(carrierSelect);
+
+            if ('custom' !== $F(carrierSelect)) {
+                titleSelect.hide();
+                carrierSelect.valueInput.show();
+                originalOnChange.call(this, event);
+            } else {
+                titleSelect.show();
+                carrierSelect.valueInput.hide();
+                carrierSelect.valueInput.value = $F(titleSelect);
+            }
+        };
+    })();
+</script>

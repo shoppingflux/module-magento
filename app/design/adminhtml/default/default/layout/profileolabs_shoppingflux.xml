@@ -3,6 +3,8 @@
     <default>
         <reference name="head">
              <action method="addCss"><name>css/shoppingflux.css</name></action>
+                <name>css/shoppingflux.css</name>
+            </action>
         </reference>
         <reference name="notifications">
             <block type="profileolabs_shoppingflux/adminhtml_register_notification" name="notification.shoppingfeed" template="profileolabs/shoppingflux/register/notification.phtml" />
@@ -27,7 +29,7 @@
         </reference>
     </adminhtml_shoppingfeed_order_cron_index>
 
-     <adminhtml_shoppingfeed_order_import_index>
+    <adminhtml_shoppingfeed_order_import_index>
         <reference name="content">
             <block type="profileolabs_shoppingflux/manageorders_adminhtml_import" name="manageorders.import" template="profileolabs/shoppingflux/manageorders/import.phtml" />
         </reference>
@@ -49,7 +51,7 @@
         </reference>
     </adminhtml_shoppingfeed_export_show>
 
-     <adminhtml_sales_order_view>
+    <adminhtml_sales_order_view>
         <reference name="sales_order_tabs">
             <action method="addTab">
                 <name>shopping_flux</name>
@@ -57,13 +59,31 @@
             </action>
         </reference>
         <reference name="order_totals">
-            <block type="adminhtml/sales_order_totals_item" name="fees_shoppingflux" template="profileolabs/shoppingflux/manageorders/sales/order/total.phtml" />
+            <block type="adminhtml/sales_order_totals_item" name="fees_shoppingflux" template="profileolabs/shoppingflux/manageorders/sales/order/total.phtml"/>
         </reference>
     </adminhtml_sales_order_view>
 
     <adminhtml_sales_order_invoice_view>
         <reference name="invoice_totals">
-            <block type="adminhtml/sales_order_totals_item" name="fees_shoppingflux" template="profileolabs/shoppingflux/manageorders/sales/order/invoice/total.phtml" />
+            <block type="adminhtml/sales_order_totals_item" name="fees_shoppingflux" template="profileolabs/shoppingflux/manageorders/sales/order/invoice/total.phtml"/>
         </reference>
     </adminhtml_sales_order_invoice_view>
+
+    <adminhtml_sales_order_invoice_new>
+        <reference name="before_body_end">
+            <block type="profileolabs_shoppingflux/manageorders_adminhtml_order_gsa_shipment_tracking_scripts_new" name="manageorders.gsa_order.shipment_tracking.scripts"/>
+        </reference>
+    </adminhtml_sales_order_invoice_new>
+
+    <adminhtml_sales_order_shipment_new>
+        <reference name="before_body_end">
+            <block type="profileolabs_shoppingflux/manageorders_adminhtml_order_gsa_shipment_tracking_scripts_new" name="manageorders.gsa_order.shipment_tracking.scripts"/>
+        </reference>
+    </adminhtml_sales_order_shipment_new>
+
+    <adminhtml_sales_order_shipment_view>
+        <reference name="before_body_end">
+            <block type="profileolabs_shoppingflux/manageorders_adminhtml_order_gsa_shipment_tracking_scripts_existing" name="manageorders.gsa_order.shipment_tracking.scripts"/>
+        </reference>
+    </adminhtml_sales_order_shipment_view>
 </layout>
