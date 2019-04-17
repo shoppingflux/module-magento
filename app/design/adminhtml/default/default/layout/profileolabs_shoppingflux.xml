@@ -2,7 +2,7 @@
 <layout version="0.1.0">
     <default>
         <reference name="head">
-             <action method="addCss"><name>css/shoppingflux.css</name></action>
+             <action method="addCss">
                 <name>css/shoppingflux.css</name>
             </action>
         </reference>
