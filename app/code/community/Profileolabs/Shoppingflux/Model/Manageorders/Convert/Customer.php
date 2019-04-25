@@ -89,8 +89,6 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Convert_Customer extends Vari
             $address->setTelephone($data['PhoneMobile']);
         }
 
-        $address->setStreet(array($data['Street1'], $data['Street2']));
-
         /** @var Profileolabs_Shoppingflux_Model_Config $config */
         $config = Mage::getSingleton('profileolabs_shoppingflux/config');
 
@@ -104,6 +102,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Convert_Customer extends Vari
 
         $regionId = false;
         $regionCode = false;
+        $isAddressRegionCode = false;
         $countryId = strtoupper($address->getCountryId());
 
         if ($countryId === 'FR') {
@@ -113,6 +112,8 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Convert_Customer extends Vari
 
             if (!preg_match('/^[a-z]{2}$/i', $regionCode)) {
                 $regionCode = null;
+            } else {
+                $isAddressRegionCode = true;
             }
         }
 
@@ -130,6 +131,12 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Convert_Customer extends Vari
                 $regionId = false;
             }
         }
+
+        if ($isAddressRegionCode && !empty($regionId)) {
+            $data['Street2'] = '';
+        }
+
+        $address->setStreet(array($data['Street1'], $data['Street2']));
 
         if ($regionId) {
             $address->setRegionId($regionId);
