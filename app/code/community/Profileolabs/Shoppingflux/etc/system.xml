@@ -299,6 +299,16 @@
                             <show_in_store>1</show_in_store>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                         </active>
+                        <include_api_key_in_feed_url>
+                            <label>Include API key in feed URL ?</label>
+                            <comment><![CDATA[If yes, the feed URL will include a crypted version of the API key. <strong>After enabling this option, you'll have to adapt the URL everywhere it is used</strong>.]]></comment>
+                            <frontend_type>select</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>0</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                        </include_api_key_in_feed_url>
                         <filter_by_attribute>
                             <label>Export selected products only ?</label>
                             <comment><![CDATA[If yes, you'll have to select products in <strong>Shoppingflux > Product Selection</strong>]]></comment>							

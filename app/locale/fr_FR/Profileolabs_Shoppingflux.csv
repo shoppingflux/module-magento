@@ -167,3 +167,5 @@
 "Exported image count","Nombre d'images à exporter"
 "GSA carrier for %s","Transporteur GSA pour %s"
 "Carrier mapping for Google Shopping Actions","Association des transporteurs pour Google Shopping Actions"
+"Include API key in feed URL ?","Inclure la clé API dans l'URL du flux ?"
+"If yes, the feed URL will include a crypted version of the API key. <strong>After enabling this option, you'll have to adapt the URL everywhere it is used</strong>.","Si oui, l'URL du flux inclura une version cryptée de la clé API. <strong>Après avoir activé cette option, vous devrez adapter l'URL partout où elle est utilisée</strong>."

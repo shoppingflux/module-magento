@@ -94,6 +94,15 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
      * @param int|null $storeId
      * @return bool
      */
+    public function isApiKeyIncludedInFeedUrl($storeId = null)
+    {
+        return $this->getConfigFlag('shoppingflux_export/general/include_api_key_in_feed_url', $storeId);
+    }
+
+    /**
+     * @param int|null $storeId
+     * @return bool
+     */
     public function isExportFilteredByAttribute($storeId = null)
     {
         return $this->getConfigFlag('shoppingflux_export/general/filter_by_attribute', $storeId);

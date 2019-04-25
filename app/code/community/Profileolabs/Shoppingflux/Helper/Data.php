@@ -51,13 +51,34 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract
     }
 
     /**
+     * @param int $storeId
+     * @return string
+     */
+    public function getFeedUrlSecureKey($storeId)
+    {
+        /** @var Mage_Core_Helper_Data $coreHelper */
+        $coreHelper = Mage::helper('core');
+        return $coreHelper->encrypt($this->getConfig()->getApiKey($storeId));
+    }
+
+    /**
      * @param Mage_Core_Model_Store $store
      * @param string $action
      * @return string
      */
     public function getFeedUrl($store, $action = 'index')
     {
-        return preg_replace('%^(.*)\?.*$%i', '$1', $store->getUrl('shoppingflux/export_flux/' . $action));
+        $params = array();
+
+        if ($this->getConfig()->isApiKeyIncludedInFeedUrl($store->getId())) {
+            $params['key'] = $this->getFeedUrlSecureKey($store->getId());
+        }
+
+        return preg_replace(
+            '%^(.*)\?.*$%i',
+            '$1',
+            $store->getUrl('shoppingflux/export_flux/' . $action, $params)
+        );
     }
 
     /**

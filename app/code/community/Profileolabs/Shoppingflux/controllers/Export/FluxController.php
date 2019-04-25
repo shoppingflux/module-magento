@@ -83,6 +83,7 @@ class Profileolabs_Shoppingflux_Export_FluxController extends Mage_Core_Controll
 
         /** @var Profileolabs_Shoppingflux_Model_Config $config */
         $config = Mage::getSingleton('profileolabs_shoppingflux/config');
+        $helper = $this->_getHelper();
 
         error_reporting(-1);
         ini_set('display_errors', 1);
@@ -94,6 +95,7 @@ class Profileolabs_Shoppingflux_Export_FluxController extends Mage_Core_Controll
         $productSku = $this->getRequest()->getParam('product_sku');
         $forceMultiStore = $this->getRequest()->getParam('force_multi_stores', false);
         $forceStore = $this->getRequest()->getParam('force_store', false);
+        $key = trim($this->getRequest()->getParam('key', ''));
 
         if ($forceStore) {
             /** @var Mage_Core_Model_App_Emulation $appEmulation */
@@ -121,6 +123,38 @@ class Profileolabs_Shoppingflux_Export_FluxController extends Mage_Core_Controll
 
         if ($forceMultiStore) {
             $block->setForceMultiStores(true);
+        }
+
+        $storeIds = array();
+
+        if ($forceMultiStore) {
+            foreach (Mage::app()->getStores(false) as $store) {
+                $storeIds[] = $store->getId();
+            }
+        } elseif ($forceStore) {
+            $storeIds[] = $forceStore;
+        } else {
+            $storeIds[] = Mage::app()->getStore()->getId();
+        }
+
+        if (!empty($storeIds)) {
+            $hasValidKey = true;
+
+            foreach ($storeIds as $storeId) {
+                if ($config->isApiKeyIncludedInFeedUrl($storeId)) {
+                    if ($helper->getFeedUrlSecureKey($storeId) !== $key) {
+                        $hasValidKey = false;
+                    } else {
+                        $hasValidKey = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$hasValidKey) {
+                $this->getResponse()->setHeader('HTTP/1.1', '403 Forbidden');
+                return;
+            }
         }
 
         try {
