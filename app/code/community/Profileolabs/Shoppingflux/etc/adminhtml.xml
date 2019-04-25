@@ -27,7 +27,7 @@
                     </children>
                 </manageorders>
                 <export translate="title" module="profileolabs_shoppingflux">
-                    <title>Export</title> 
+                    <title>Export</title>
                     <sort_order>200</sort_order>
                     <children>
                         <show_flux translate="title" module="profileolabs_shoppingflux">
@@ -45,7 +45,7 @@
                 <crons translate="title" module="profileolabs_shoppingflux">
                     <title>Cron log</title>
                     <sort_order>900</sort_order>
-                    <action>adminhtml/shoppingfeed_order_cron</action>  
+                    <action>adminhtml/shoppingfeed_order_cron</action>
                 </crons>
             </children>
         </shoppingflux>

@@ -52,7 +52,7 @@
                         </id_tracking>
                     </fields>
                 </configuration>
-            </groups>   
+            </groups>
         </shoppingflux>
         <shoppingflux_mo translate="label" module="profileolabs_shoppingflux">
             <label>Manage Orders</label>
@@ -251,7 +251,7 @@
                     <fields>
                         <limit_hours>
                             <label>Max time before sending shipment update to marketplace</label>
-                            <comment>In hours. If the shipment has still not any tracking number filled after X hours, the shipment is sent to the marketplace without tracking number.</comment>							
+                            <comment>In hours. If the shipment has still not any tracking number filled after X hours, the shipment is sent to the marketplace without tracking number.</comment>
                             <frontend_type>select</frontend_type>
                             <source_model>profileolabs_shoppingflux/export_source_tracking_delay</source_model>
                             <sort_order>10</sort_order>
@@ -311,7 +311,7 @@
                         </include_api_key_in_feed_url>
                         <filter_by_attribute>
                             <label>Export selected products only ?</label>
-                            <comment><![CDATA[If yes, you'll have to select products in <strong>Shoppingflux > Product Selection</strong>]]></comment>							
+                            <comment><![CDATA[If yes, you'll have to select products in <strong>Shoppingflux > Product Selection</strong>]]></comment>
                             <frontend_type>select</frontend_type>
                             <sort_order>5</sort_order>
                             <show_in_default>0</show_in_default>
@@ -488,7 +488,7 @@
                             <show_in_default>0</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>1</show_in_store>
-                        </execution_time_limit>	
+                        </execution_time_limit>
                         <enable_sync>
                             <depends>
                                 <show_advanced_configuration>1</show_advanced_configuration>
@@ -514,7 +514,7 @@
                             <show_in_website>0</show_in_website>
                              <show_in_store>1</show_in_store>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
-                        </enable_cron>	
+                        </enable_cron>
                         <use_manage_stock>
                             <depends>
                                 <show_advanced_configuration>1</show_advanced_configuration>
@@ -560,7 +560,7 @@
                                 <show_advanced_configuration>1</show_advanced_configuration>
                             </depends>
                             <label>Advanced management of configurable products ?</label>
-                            <comment>If no, only configurable products will be transfered (without their children). In most cases, should be set to 'Yes'.</comment>							
+                            <comment>If no, only configurable products will be transfered (without their children). In most cases, should be set to 'Yes'.</comment>
                             <frontend_type>select</frontend_type>
                             <sort_order>170</sort_order>
                             <show_in_default>0</show_in_default>
@@ -568,7 +568,7 @@
                             <show_in_store>1</show_in_store>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <backend_model>profileolabs_shoppingflux/system_config_backend_refresh</backend_model>
-                        </manage_configurable>	
+                        </manage_configurable>
                         <manage_catalog_rules>
                             <depends>
                                 <show_advanced_configuration>1</show_advanced_configuration>
@@ -581,7 +581,7 @@
                             <show_in_store>1</show_in_store>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <backend_model>profileolabs_shoppingflux/system_config_backend_refresh</backend_model>
-                        </manage_catalog_rules>	
+                        </manage_catalog_rules>
                         <manage_media_gallery>
                             <depends>
                                 <show_advanced_configuration>1</show_advanced_configuration>
@@ -595,7 +595,7 @@
                             <show_in_store>1</show_in_store>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <backend_model>profileolabs_shoppingflux/system_config_backend_refresh</backend_model>
-                        </manage_media_gallery>	
+                        </manage_media_gallery>
                         <transform_qty_increments>
                             <depends>
                                 <show_advanced_configuration>1</show_advanced_configuration>
