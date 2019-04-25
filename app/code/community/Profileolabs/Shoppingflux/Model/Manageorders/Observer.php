@@ -95,16 +95,20 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
             ) {
                 $trackingUrl = call_user_func(array($this, $this->_trackingUrlCallbacks[$matches[1]]), $trackingInfo);
             }
-        } elseif ('fedex' === $carrierCode) {
-            $trackingUrl = 'https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=' . $trackingNumber;
-        } elseif ('ups' === $carrierCode) {
-            if (preg_match('%1Z[a-z0-9]{16}%i', $trackingNumber)) {
-                $trackingUrl = 'https://www.ups.com/track?tracknum=' . $trackingNumber . '/trackdetails';
+        } else {
+            $trackingNumber = urlencode(trim($trackingNumber));
+
+            if ('fedex' === $carrierCode) {
+                $trackingUrl = 'https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=' . $trackingNumber;
+            } elseif ('ups' === $carrierCode) {
+                if (preg_match('%^1Z[a-z0-9]{16}$%i', $trackingNumber)) {
+                    $trackingUrl = 'https://www.ups.com/track?tracknum=' . $trackingNumber . '/trackdetails';
+                }
+            } elseif ('usps' === $carrierCode) {
+                $trackingUrl = 'https://tools.usps.com/go/TrackConfirmAction_input?qtc_tLabels1=' . $trackingNumber;
+            } elseif ('dhl' === $carrierCode) {
+                $trackingUrl = 'http://www.dhl.com/en/express/tracking.html?AWB=' . $trackingNumber;
             }
-        } elseif ('usps' === $carrierCode) {
-            $trackingUrl = 'https://tools.usps.com/go/TrackConfirmAction_input?qtc_tLabels1=' . $trackingNumber;
-        } elseif ('dhl' === $carrierCode) {
-            $trackingUrl = 'http://www.dhl.com/en/express/tracking.html?AWB=' . $trackingNumber;
         }
 
         return $trackingUrl;
