@@ -6,7 +6,7 @@ if (!$_feesShoppingFlux):
     $_feesShoppingFlux = (float) $this->getSource()->getOrder()->getFeesShoppingflux();
 endif;
 ?>
-<?php if ($feesShoppingFlux): ?>
+<?php if ($_feesShoppingFlux): ?>
     <tr class="shoppingflux">
         <td class="label a-right" <?php echo $this->getColspan() ? 'colspan="' . $this->getColspan() . '"' : '' ?>>
             <?php echo Mage::helper('profileolabs_shoppingflux')->formatFeesDescription($_feesShoppingFlux, $this->getSource()->getOrder()->getMarketplaceShoppingflux()) ?>
