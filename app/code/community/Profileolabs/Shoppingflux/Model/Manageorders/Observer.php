@@ -116,7 +116,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
 
     /**
      * @param Mage_Sales_Model_Order_Shipment $shipment
-     * @return string|false
+     * @return array|false
      */
     public function getShipmentTrackingNumber($shipment)
     {
@@ -152,7 +152,20 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
         Mage::dispatchEvent('shoppingflux_get_shipment_tracking', array('data_object' => $dataObject));
         $result = $dataObject->getData('result');
 
-        return $result;
+        return is_array($result) ? $result : false;
+    }
+
+    /**
+     * @param mixed $trackingData
+     * @return bool
+     */
+    protected function _isSendableTrackingData($trackingData)
+    {
+        return is_array($trackingData)
+            && isset($trackingData['trackId'])
+            && isset($trackingData['trackTitle'])
+            && ('' !== trim($trackingData['trackId']))
+            && ('' !== trim($trackingData['trackTitle']));
     }
 
     /**
@@ -231,9 +244,11 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
                 $storeId = $shipment->getStoreId();
 
                 if ((Mage::app()->getStore()->getCode() == 'admin') || (Mage::app()->getStore()->getId() == $storeId)) {
-                    $trackingInfos = $this->getShipmentTrackingNumber($shipment);
+                    $trackingData = $this->getShipmentTrackingNumber($shipment);
 
-                    if ($trackingInfos || $shipment->getUpdatedAt() < $this->getConfig()->getShipmentUpdateLimit()) {
+                    if ($this->_isSendableTrackingData($trackingData)
+                        || ($shipment->getUpdatedAt() < $this->getConfig()->getShipmentUpdateLimit())
+                    ) {
                         $this->sendStatusShipped($shipment);
                         $item->delete();
                     }
@@ -299,7 +314,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
             return $this;
         }
 
-        $trackingInfos = $this->getShipmentTrackingNumber($shipment);
+        $trackingData = $this->getShipmentTrackingNumber($shipment);
         $orderIdShoppingflux = $order->getOrderIdShoppingflux();
         $marketplace = $order->getMarketplaceShoppingflux();
 
@@ -309,9 +324,9 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
             $orderIdShoppingflux,
             $marketplace,
             Profileolabs_Shoppingflux_Model_Service::ORDER_STATUS_SHIPPED,
-            $trackingInfos ? $trackingInfos['trackId'] : '',
-            $trackingInfos ? $trackingInfos['trackTitle'] : '',
-            $trackingInfos ? $trackingInfos['trackUrl'] : ''
+            $trackingData ? $trackingData['trackId'] : '',
+            $trackingData ? $trackingData['trackTitle'] : '',
+            $trackingData ? $trackingData['trackUrl'] : ''
         );
 
 
