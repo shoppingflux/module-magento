@@ -3,6 +3,22 @@
 class Profileolabs_Shoppingflux_Helper_Sales extends Mage_Core_Helper_Abstract
 {
     /**
+     * @param string $marketplace
+     * @return bool
+     */
+    public function isFulfilmentMarketplace($marketplace)
+    {
+        return in_array(
+            strtolower($marketplace),
+            array(
+                'amazon fba', // Amazon
+                'epmm', // Monechelle
+                'clogistique', // Cdiscount
+            )
+        );
+    }    
+
+    /**
      * @param int|null $storeId
      * @return array
      */

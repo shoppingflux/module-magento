@@ -542,6 +542,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
 
                 if (!is_object($item)) {
                     $this->getCheckoutSession()->clear();
+
                     Mage::throwException(
                         'le produit sku = ' . $sku . ' n\'a pas pu être ajouté! Id = ' . $product->getId()
                         . ' Item = ' . (string) $item
@@ -689,6 +690,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
      */
     protected function _saveOrder(array $sfOrder, $storeId)
     {
+        $config = $this->getConfig();
         $orderIdShoppingFlux = (string) $sfOrder['IdOrder'];
 
         $additionalData = array(
@@ -713,8 +715,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
             $additionalData['other_shoppingflux'] .= 'Relay ID : ' . $sfOrder['ShippingAddress'][0]['RelayID'];
         }
 
-        $shippingMethod = $this->getConfig()
-            ->getShippingMethodFor($sfOrder['Marketplace'], $sfOrder['ShippingMethod'], $storeId);
+        $shippingMethod = $config->getShippingMethodFor($sfOrder['Marketplace'], $sfOrder['ShippingMethod'], $storeId);
 
         if ($shippingMethod) {
             $additionalData['shipping_method'] = $shippingMethod;
@@ -722,6 +723,15 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
         }
 
         $quote = $this->_getQuote();
+
+        /** @var Profileolabs_Shoppingflux_Helper_Sales $salesHelper */
+        $salesHelper = Mage::helper('profileolabs_shoppingflux/sales');
+        $isFulfiledOrder = $salesHelper->isFulfilmentMarketplace($sfOrder['Marketplace']);
+
+        if ($isFulfiledOrder) {
+            $this->_getQuote()->setInventoryProcessed(true);
+        }
+
         /** @var Mage_Sales_Model_Service_Quote $service */
         $service = Mage::getModel('sales/service_quote', $this->_getQuote());
         $service->setOrderData($additionalData);
@@ -746,8 +756,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
         }
 
         if ($order) {
-            $newStatus = $this->getConfig()
-                ->getConfigData('shoppingflux_mo/manageorders/new_order_status', $order->getStoreId());
+            $newStatus = $config->getConfigData('shoppingflux_mo/manageorders/new_order_status', $order->getStoreId());
 
             if ($newStatus) {
                 $order->setStatus($newStatus);
@@ -756,10 +765,12 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
 
             $this->_saveInvoice($order);
 
-            $processingStatus = $this->getConfig()
-                ->getConfigData('shoppingflux_mo/manageorders/processing_order_status', $order->getStoreId());
+            $processingStatus = $config->getConfigData(
+                'shoppingflux_mo/manageorders/processing_order_status',
+                $order->getStoreId()
+            );
 
-            if ($processingStatus && ($order->getState() == 'processing')) {
+            if (($order->getState() === 'processing') && $processingStatus) {
                 $order->setStatus($processingStatus);
                 $order->save();
             }
@@ -794,6 +805,32 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
                     );
 
                     $orderItem->save();
+                }
+            }
+
+            if ($isFulfiledOrder) {
+                $this->_saveFulfilmentShipment($order);
+
+                $processingStatus = $config->getConfigData(
+                    'shoppingflux_mo/manageorders/fulfilment_processing_order_status',
+                    $order->getStoreId()
+                );
+
+                $completeStatus = $config->getConfigData(
+                    'shoppingflux_mo/manageorders/fulfilment_complete_order_status',
+                    $order->getStoreId()
+                );
+
+                if ($order->getState() === 'complete') {
+                    if ($completeStatus) {
+                        $order->setStatus($completeStatus);
+                        $order->save();
+                    }
+                } elseif ($order->getState() === 'processing') {
+                    if ($processingStatus) {
+                        $order->setStatus($processingStatus);
+                        $order->save();
+                    }
                 }
             }
 
@@ -927,7 +964,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
                     return true;
                 }
             }
-        } else if ($item->getParentItem()) {
+        } elseif ($item->getParentItem()) {
             if (isset($qtys[$item->getParentItem()->getId()]) && $qtys[$item->getParentItem()->getId()] > 0) {
                 return true;
             }
@@ -985,5 +1022,60 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
 
         $invoice->collectTotals();
         return $invoice;
+    }
+
+    /**
+     * @param Mage_Sales_Model_Order $order
+     */
+    protected function _saveFulfilmentShipment($order)
+    {
+        if (!$order->canShip()) {
+            $message = $this->getHelper()->__('The fulfiled order #%s is not shippable', $order->getIncrementId());
+            $this->getHelper()->log($message);
+            return;
+        }
+
+        /** @var Mage_Sales_Model_Convert_Order $orderConvertor */
+        $orderConvertor = Mage::getModel('sales/convert_order');
+        $shipment = $orderConvertor->toShipment($order);
+
+        /** @var Mage_Sales_Model_Order_Item $orderItem */
+        foreach ($order->getAllItems() as $orderItem) {
+            if (!$orderItem->getQtyToShip()) {
+                continue;
+            }
+
+            if ($orderItem->getIsVirtual()) {
+                continue;
+            }
+
+            $shipmentItem = $orderConvertor->itemToShipmentItem($orderItem);
+            $shippedQty = $orderItem->getQtyToShip();
+            $shipmentItem->setQty($shippedQty);
+
+            $shipment->addItem($shipmentItem);
+        }
+
+        $shipment->register();
+        $shipment->getOrder()->setIsInProcess(true);
+
+        try {
+            /** @var Mage_Core_Model_Resource_Transaction $transaction */
+            $transaction = Mage::getModel('core/resource_transaction');
+            $transaction->addObject($shipment);
+            $transaction->addObject($shipment->getOrder());
+            $transaction->save();
+        } catch (Exception $e) {
+            Mage::logException($e);
+
+            $message = $this->getHelper()
+                ->__(
+                    'A shipment could not automatically be created for the fulfiled order #%s: %s',
+                    $order->getIncrementId(),
+                    $e->getMessage()
+                );
+
+            $this->getHelper()->log($message);
+        }
     }
 }
