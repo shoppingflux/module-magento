@@ -80,7 +80,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
         'msrp_display_actual_price_type',
         'shoppingflux_default_category',
         'shoppingflux_product',
-        'main_category'
+        'main_category',
     );
 
     /**
@@ -258,7 +258,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
                                 'Marketplace' => $sfOrder['Marketplace'],
                                 'MageOrderId' => is_object($importedOrder) ? $importedOrder->getIncrementId() : '',
                                 'ShippingMethod' => $sfOrder['ShippingMethod'],
-                                'ErrorOrder' => is_object($importedOrder) ? false : true
+                                'ErrorOrder' => is_object($importedOrder) ? false : true,
                             );
 
                             continue;
@@ -526,7 +526,15 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
             $useProductId = $this->getConfig()->getConfigData('shoppingflux_mo/manageorders/use_product_id', $storeId);
 
             if ($useProductId) {
-                $productId = $sku;
+                $productId = null;
+
+                if (!ctype_digit(trim($sku))) {
+                    $productId = $this->getProductModel()->getResource()->getIdBySku($sku);
+                }
+
+                if (!$productId) {
+                    $productId = $sku;
+                }
             } else {
                 $productId = $this->getProductModel()->getResource()->getIdBySku($sku);
             }
