@@ -353,7 +353,7 @@
             </remove_old_products>
             <update_marketplaces>
                 <schedule>
-                    <cron_expr>0 2 1 * *</cron_expr>
+                    <cron_expr>0 2 * * *</cron_expr>
                 </schedule>
                 <run>
                     <model>profileolabs_shoppingflux/manageorders_observer::updateMarketplaceList</model>

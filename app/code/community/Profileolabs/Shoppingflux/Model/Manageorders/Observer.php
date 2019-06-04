@@ -433,41 +433,45 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
 
     public function updateMarketplaceList()
     {
-        $apiKey = false;
+        $apiKeys = array();
 
         foreach (Mage::app()->getStores() as $store) {
-            if (!$apiKey) {
-                $apiKey = $this->getConfig()->getApiKey($store->getId());
+            if ($apiKey = trim($this->getConfig()->getApiKey($store->getId()))) {
+                $apiKeys[] = $apiKey;
             }
         }
 
-        if (!$apiKey) {
+        if (empty($apiKeys)) {
             return;
         }
 
         $wsUri = $this->getConfig()->getWsUri();
-        $service = new Profileolabs_Shoppingflux_Model_Service($apiKey, $wsUri);
 
-        try {
-            $marketplaces = $service->getMarketplaces();
+        foreach ($apiKeys as $apiKey) {
+            $service = new Profileolabs_Shoppingflux_Model_Service($apiKey, $wsUri);
 
-            if (count($marketplaces) > 5) {
-                $marketplaceCsvFile = Mage::getModuleDir('', 'Profileolabs_Shoppingflux')
-                    . DS
-                    . 'etc'
-                    . DS
-                    . 'marketplaces.csv';
+            try {
+                $marketplaces = $service->getMarketplaces();
 
-                $handle = fopen($marketplaceCsvFile, 'w+');
+                if (count($marketplaces) > 5) {
+                    $marketplaceCsvFile = Mage::getModuleDir('', 'Profileolabs_Shoppingflux')
+                        . DS
+                        . 'etc'
+                        . DS
+                        . 'marketplaces.csv';
 
-                foreach ($marketplaces as $marketplace) {
-                    fwrite($handle, $marketplace . "\n");
+                    $handle = fopen($marketplaceCsvFile, 'w+');
+
+                    foreach ($marketplaces as $marketplace) {
+                        fwrite($handle, $marketplace . "\n");
+                    }
+
+                    fclose($handle);
+                    break;
                 }
-
-                fclose($handle);
+            } catch (Exception $e) {
+                Mage::logException($e);
             }
-        } catch (Exception $e) {
-            Mage::logException($e);
         }
     }
 }
