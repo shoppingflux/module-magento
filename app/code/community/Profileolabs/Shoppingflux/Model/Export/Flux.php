@@ -1004,11 +1004,14 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
         $mediaUrl = Mage::getBaseUrl('media') . 'catalog/product';
         $exportCount = $this->getConfig()->getExportedImageCount();
         $exportedCount = 1;
+        $exportedUrls = array();
         $baseImage = $product->getData('image');
+        $baseImageUrl = $mediaUrl . $baseImage;
 
-        if (($baseImage != '') && ($baseImage != 'no_selection')) {
-            $data['image-url-' . $exportedCount] = $mediaUrl . $baseImage;
+        if (!empty($baseImage) && ($baseImage !== 'no_selection')) {
+            $data['image-url-' . $exportedCount] = $baseImageUrl;
             $data['image-label-' . $exportedCount] = $product->getData('image_label');
+            $exportedUrls[] = $baseImageUrl;
             $exportedCount++;
         }
 
@@ -1018,16 +1021,15 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
             $mediaGallery->getBackend()->afterLoad($product);
 
             foreach ($product->getMediaGallery('images') as $image) {
-                if ($mediaUrl . $baseImage == $mediaConfig->getMediaUrl($image['file'])) {
+                $imageUrl = $mediaConfig->getMediaUrl($image['file']);
+
+                if ($image['disabled'] || in_array($imageUrl, $exportedUrls, true)) {
                     continue;
                 }
 
-                if ($image['disabled']) {
-                    continue;
-                }
-
-                $data['image-url-' . $exportedCount] = $mediaConfig->getMediaUrl($image['file']);
+                $data['image-url-' . $exportedCount] = $imageUrl;
                 $data['image-label-' . $exportedCount] = $image['label'];
+                $exportedUrls[] = $imageUrl;
                 $exportedCount++;
 
                 if (($exportCount !== false) && ($exportedCount >= $exportCount)) {
@@ -1306,7 +1308,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
 
                 $images = $this->getImages($images, $usedProduct, $storeId, false);
 
-                if (!isset($images['image-url-1']) || !$images['image-url-1']) {
+                if (!$images['image-url-1']) {
                     $images = $this->getImages($images, $product, $storeId);
                 }
 
