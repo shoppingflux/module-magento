@@ -291,6 +291,8 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
                         $appEmulation->stopEnvironmentEmulation($initialEnvironmentInfo);
                     }
                 } catch (Exception $e) {
+                    Mage::logException($e);
+
                     if (!$isCurrentStore && $appEmulation) {
                         $appEmulation->stopEnvironmentEmulation($initialEnvironmentInfo);
                     }
