@@ -65,14 +65,25 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
      */
     public function getEntry($productSku, $storeId)
     {
+        /**
+         * Question marks in SKUs will be replaced by (quoted) empty strings, because of how SQL conditions are handled
+         * (@see Varien_Data_Collection_Db::addFieldToFilter() / @see Zend_Db_Adapter_Abstract::quoteInto()).
+         * There is no way to work around this behavior, so we just instead replace question marks with wildcards,
+         * and defer finding the right item to later.
+         */
+        $searchableSku = str_replace('\\', '\\\\', $productSku);
+        $searchableSku = str_replace(array('_', '%'), array('\_', '\%'), $searchableSku);
+        $searchableSku = str_replace('?', '_', $searchableSku);
+
+        /** @var Profileolabs_Shoppingflux_Model_Mysql4_Export_Flux_Collection $collection */
         $collection = $this->getCollection();
-        $collection->addFieldToFilter('sku', $productSku);
+        $collection->addFieldToFilter('sku', array('like' => $searchableSku));
         $collection->addFieldToFilter('store_id', $storeId);
 
-        if ($collection->getSize() > 0) {
-            $collection->setCurPage(1);
-            $collection->setPageSize(1);
-            return $collection->getFirstItem();
+        foreach ($collection as $item) {
+            if ($item->getSku() === $productSku) {
+                return $item;
+            }
         }
 
         /** @var Mage_Catalog_Model_Product $product */
