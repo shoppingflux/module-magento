@@ -338,7 +338,12 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
         $product = $this->_getProduct($productId, $storeId);
 
         if ($product && $product->getId()) {
-            $fluxEntry = $this->getEntry($product->getSku(), $storeId);
+            $sku = trim($product->getSku());
+            $fluxEntry = $this->getEntry($sku, $storeId);
+
+            if (!$fluxEntry->getId() && ('' === $sku)) {
+                return;
+            }
 
             if (!$fluxEntry->getData('update_needed')) {
                 $fluxEntry->setData('update_needed', 1);
@@ -616,6 +621,11 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
 
         if (!$product || !$product->getSku()) {
             $fluxEntry = $this->getEntry($productSku, $storeId);
+
+            if (!$fluxEntry->getId()) {
+                return;
+            }
+
             $fluxEntry->setData('should_export', 0);
             $fluxEntry->setData('update_needed', 0);
             $fluxEntry->setData('updated_at', date('Y-m-d H:i:s', $dateModel->timestamp(time())));
