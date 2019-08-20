@@ -432,7 +432,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
      */
     public function getShippingMethodFor($marketplace = false, $sfShippingMethod = false, $storeId = null)
     {
-        $defaultMethod = $this->_getDefaultShippingMethod();
+        $defaultMethod = $this->_getDefaultShippingMethod($storeId);
 
         if (!$marketplace) {
             return $defaultMethod;
@@ -449,7 +449,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
         $shippingMethodModel = Mage::getModel('profileolabs_shoppingflux/manageorders_shipping_method');
         $sfMethodCode = $shippingMethodModel->getFullShippingMethodCodeFor($marketplace, $sfShippingMethod);
         $sfMethodCode = preg_replace('%[^a-zA-Z0-9_]%', '', $sfMethodCode);
-        $sfMethod = $this->_getSfShippingMethod($sfMethodCode);
+        $sfMethod = $this->_getSfShippingMethod($sfMethodCode, $storeId);
 
         return ($sfMethod ? $sfMethod : ($marketplaceMethod ? $marketplaceMethod : $defaultMethod));
     }
