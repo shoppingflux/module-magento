@@ -98,7 +98,9 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
         } else {
             $trackingNumber = urlencode(trim($trackingNumber));
 
-            if ('fedex' === $carrierCode) {
+            if ('colissimoflexibilite' === $carrierCode) {
+                $trackingUrl = 'https://www.laposte.fr/outils/suivre-vos-envois?code=' . $trackingNumber;
+            } elseif ('fedex' === $carrierCode) {
                 $trackingUrl = 'https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers=' . $trackingNumber;
             } elseif ('ups' === $carrierCode) {
                 if (preg_match('%^1Z[a-z0-9]{16}$%i', $trackingNumber)) {
