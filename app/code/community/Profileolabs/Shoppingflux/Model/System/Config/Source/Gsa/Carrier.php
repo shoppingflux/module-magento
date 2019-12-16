@@ -13,13 +13,21 @@ class Profileolabs_Shoppingflux_Model_System_Config_Source_Gsa_Carrier
     public function toOptionHash()
     {
         return array(
+            'boxtal' => 'Boxtal',
+            'bpost' => 'bpost',
+            'chronopost' => 'Chronopost',
+            'colis prive' => 'Colis Privé',
+            'colissimo' => 'Colissimo',
             'cxt' => 'CXT',
             'deliv' => 'Deliv',
             'dhl' => 'DHL',
+            'dpd' => 'DPD',
             'dynamex' => 'Dynamex',
             'ecourier' => 'eCourier',
             'emsy' => 'Emsy',
             'fedex' => 'FedEx',
+            'geodis' => 'Geodis',
+            'gls' => 'GLS',
             'google' => 'Google',
             'gsx' => 'GSX',
             'lasership' => 'Lasership',
