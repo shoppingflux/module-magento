@@ -14,8 +14,15 @@ class Profileolabs_Shoppingflux_Block_Manageorders_Adminhtml_System_Config_Form_
         $collection = Mage::getResourceModel('profileolabs_shoppingflux/manageorders_shipping_method_collection');
         $i = 1;
 
+        /** @var Varien_Data_Form $form */
+        $form = $element->getForm();
+
         foreach ($collection as $shippingMethod) {
-            $this->_addShippingMethodField($element, $shippingMethod->getFullShippingMethodCode(), 10 * $i++);
+            $fullMethodCode = $shippingMethod->getFullShippingMethodCode();
+
+            if (!$form->getElement($fullMethodCode)) {
+                $this->_addShippingMethodField($element, $fullMethodCode, 10 * $i++);
+            }
         }
 
         if ($i === 1) {
