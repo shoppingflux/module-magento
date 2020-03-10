@@ -2,6 +2,9 @@
 
 class Profileolabs_Shoppingflux_Block_Export_Flux extends Mage_Core_Block_Abstract
 {
+    /** @var array $productNodes */
+    protected $productNodes = [];
+
     protected function _loadCache()
     {
         return false;
@@ -130,6 +133,7 @@ class Profileolabs_Shoppingflux_Block_Export_Flux extends Mage_Core_Block_Abstra
         /** @var Mage_Core_Model_Resource_Iterator $iterator */
         $iterator = Mage::getSingleton('core/resource_iterator');
         $iterator->walk($collection->getSelect(), array(array($this, 'appendProductNode')), array());
+        $this->setData('flux_content', join('', $this->productNodes));
 
         return $this->_getData('flux_content') . $xmlObject->endXml();
     }
@@ -139,6 +143,6 @@ class Profileolabs_Shoppingflux_Block_Export_Flux extends Mage_Core_Block_Abstra
      */
     public function appendProductNode(array $args)
     {
-        $this->setData('flux_content', $this->_getData('flux_content') . $args['row']['xml']);
+        $this->productNodes[] = $args['row']['xml'];
     }
 }
