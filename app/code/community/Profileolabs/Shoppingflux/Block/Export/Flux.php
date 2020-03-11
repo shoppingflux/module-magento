@@ -3,7 +3,7 @@
 class Profileolabs_Shoppingflux_Block_Export_Flux extends Mage_Core_Block_Abstract
 {
     /** @var array $productNodes */
-    protected $productNodes = [];
+    protected $productNodes = array();
 
     protected function _loadCache()
     {
@@ -107,7 +107,7 @@ class Profileolabs_Shoppingflux_Block_Export_Flux extends Mage_Core_Block_Abstra
         /** @var Mage_Core_Model_Date $dateModel */
         $dateModel = Mage::getModel('core/date');
 
-        $fluxContent = $xmlObject->startXml(
+        $fluxHeader = $xmlObject->startXml(
             array(
                 'store_id' => Mage::app()->getStore()->getId(),
                 'generated-at' => date('d/m/Y H:i:s', $dateModel->timestamp(time())),
@@ -120,8 +120,6 @@ class Profileolabs_Shoppingflux_Block_Export_Flux extends Mage_Core_Block_Abstra
             )
         );
 
-        $this->setData('flux_content', $fluxContent);
-
         if ($this->getProductSku()) {
             $collection->addFieldToFilter('sku', $this->getProductSku());
         }
@@ -133,9 +131,8 @@ class Profileolabs_Shoppingflux_Block_Export_Flux extends Mage_Core_Block_Abstra
         /** @var Mage_Core_Model_Resource_Iterator $iterator */
         $iterator = Mage::getSingleton('core/resource_iterator');
         $iterator->walk($collection->getSelect(), array(array($this, 'appendProductNode')), array());
-        $this->setData('flux_content', join('', $this->productNodes));
 
-        return $this->_getData('flux_content') . $xmlObject->endXml();
+        return $fluxHeader . implode('', $this->productNodes) . $xmlObject->endXml();
     }
 
     /**
