@@ -87,7 +87,9 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public function generateToken($prefix = '0')
     {
-        return md5($prefix . $_SERVER['SERVER_ADDR'] . time());
+        /** @var Mage_Core_Helper_Data $coreHelper */
+        $coreHelper = Mage::helper('core');
+        return $coreHelper->getRandomString(32, '0123456789abcdef');
     }
 
     public function generateTokens()
@@ -363,7 +365,7 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract
                 . ($withNotInMenu ? '_all' : '_inmenu');
 
             $cacheTags = array('shoppingflux');
-            $this->_categoriesWithParents = unserialize(Mage::app()->loadCache($mageCacheKey));
+            $this->_categoriesWithParents = @json_decode(Mage::app()->loadCache($mageCacheKey), true);
 
             if (!$this->_categoriesWithParents) {
                 $rootCategoryId = Mage::app()->getStore($storeId)->getRootCategoryId();
@@ -478,7 +480,7 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract
                     $this->_categoriesWithParents['id'][$categoryId] = $category->getIds();
                 }
 
-                Mage::app()->saveCache(serialize($this->_categoriesWithParents), $mageCacheKey, $cacheTags);
+                Mage::app()->saveCache(json_encode($this->_categoriesWithParents), $mageCacheKey, $cacheTags);
                 unset($categories);
             }
         }
