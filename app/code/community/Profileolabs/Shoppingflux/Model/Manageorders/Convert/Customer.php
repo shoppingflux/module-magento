@@ -106,7 +106,17 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Convert_Customer extends Vari
         $countryId = strtoupper($address->getCountryId());
 
         if ($countryId === 'FR') {
-            $regionCode = $stringHelper->substr(str_pad($address->getPostcode(), 5, '0', STR_PAD_LEFT), 0, 2);
+            $postcode = str_pad($address->getPostcode(), 5, '0', STR_PAD_LEFT);
+            $regionCode = $stringHelper->substr($postcode, 0, 2);
+
+            if ($regionCode === '20') {
+                // Specific treatment for Corsica postcodes / regions.
+                if ('201' === $stringHelper->substr($postcode, 0, 3)) {
+                    $regionCode = '2A';
+                } else {
+                    $regionCode = '2B';
+                }
+            }
         } elseif (in_array($countryId, array('CA', 'US'), true)) {
             $regionCode = trim($data['Street2']);
 
