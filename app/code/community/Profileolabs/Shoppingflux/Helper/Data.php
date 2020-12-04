@@ -58,7 +58,12 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract
     {
         /** @var Mage_Core_Helper_Data $coreHelper */
         $coreHelper = Mage::helper('core');
-        return $coreHelper->encrypt($this->getConfig()->getApiKey($storeId));
+
+        return str_replace(
+            array('+', '/', '='),
+            '-',
+            $coreHelper->encrypt($this->getConfig()->getApiKey($storeId))
+        );
     }
 
     /**
