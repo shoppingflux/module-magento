@@ -212,6 +212,38 @@ class Profileolabs_Shoppingflux_Model_Export_Observer
     /**
      * @param Varien_Event_Observer $observer
      */
+    public function catalogProductDeleteAfter($observer)
+    {
+        if (($product = $observer->getEvent()->getData('product'))
+            && ($product instanceof Mage_Catalog_Model_Product)
+        ) {
+            $sku = trim($product->getSku());
+
+            if ('' !== $sku) {
+                $fluxModel = $this->getFluxModel();
+
+                try {
+                    /** @var Mage_Core_Model_Store $store */
+                    foreach (Mage::app()->getStores() as $store) {
+                        $storeId = $store->getId();
+                        $fluxEntry = $fluxModel->getEntry($sku, $storeId);
+
+                        if ($fluxEntry->getId()) {
+                            $fluxEntry->setData('should_export', 0);
+                            $fluxEntry->setData('update_needed', 1);
+                            $fluxEntry->save();
+                        }
+                    }
+                } catch (Exception $e) {
+                    // Let the "remove_old_products" cron job clean up the entry later.
+                }
+            }
+        }
+    }
+
+    /**
+     * @param Varien_Event_Observer $observer
+     */
     public function saveShoppingfluxCategoryProducts($observer)
     {
         if (($category = $observer->getEvent()->getData('category'))

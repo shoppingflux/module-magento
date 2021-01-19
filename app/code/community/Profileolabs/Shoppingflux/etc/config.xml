@@ -265,6 +265,10 @@
                         <class>Profileolabs_Shoppingflux_Model_Export_Observer</class>
                         <method>realtimeUpdateDeletedProduct</method>
                     </shoppingflux_delete_event>
+                    <shoppingflux_catalog_product_delete_after_done>
+                        <class>Profileolabs_Shoppingflux_Model_Export_Observer</class>
+                        <method>catalogProductDeleteAfter</method>
+                    </shoppingflux_catalog_product_delete_after_done>
                 </observers>
             </catalog_product_delete_after_done>
             <shoppingflux_mass_publish_save_item>
