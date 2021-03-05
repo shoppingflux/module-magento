@@ -2,6 +2,8 @@
 
 class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
 {
+    const LOCK_CODE = 'shopping_feed_order_import';
+
     /**
      * @var Mage_Sales_Model_Quote|null
      */
@@ -33,9 +35,9 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
     protected $_readOrderCount = 0;
 
     /**
-     * @var int
+     * @var int|null
      */
-    protected $_importedOrderCount = 0;
+    protected $_importedOrderCount = null;
 
     /**
      * @var array
@@ -117,7 +119,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getImportedOrderCount()
     {
@@ -215,11 +217,34 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
             $stores = $allStores;
         }
 
+        $importableStoreIds = array();
+
         foreach ($stores as $_store) {
-            if (!$isAdmin && ($storeCode != $_store->getCode())) {
-                continue;
+            if ($isAdmin || ($storeCode === $_store->getCode())) {
+                $importableStoreIds[] = $_store->getId();
+            }
+        }
+
+        $isUsingLock = false;
+
+        foreach ($importableStoreIds as $storeId) {
+            if ($isUsingLock = $this->getConfig()->isOrderImportUsingLock($storeId)) {
+                break;
+            }
+        }
+
+        /** @var Profileolabs_Shoppingflux_Helper_Lock $lockHelper */
+        $lockHelper = Mage::helper('profileolabs_shoppingflux/lock');
+
+        if ($isUsingLock) {
+            if ($lockHelper->isLocked(self::LOCK_CODE)) {
+                return $this;
             }
 
+            $lockHelper->lock(self::LOCK_CODE);
+        }
+
+        foreach ($importableStoreIds as $storeId) {
             $storeId = $_store->getId();
 
             if ($this->getConfig()->isOrdersEnabled($storeId)) {
@@ -241,6 +266,10 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
                     $ordersResult = $service->getOrders();
                     $this->_importedOrderCount = 0;
                 } catch (Exception $e) {
+                    if ($isUsingLock) {
+                        $lockHelper->unlock(self::LOCK_CODE);
+                    }
+
                     Mage::logException($e);
                     $message = $this->getHelper()->__('Order import error : %s', $e->getMessage());
                     $this->getHelper()->log($message);
@@ -306,10 +335,18 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
                         }
                     }
                 } catch (Exception $e) {
+                    if ($isUsingLock) {
+                        $lockHelper->unlock(self::LOCK_CODE);
+                    }
+
                     $this->getHelper()->log($e->getMessage());
                     Mage::throwException($e);
                 }
             }
+        }
+
+        if ($isUsingLock) {
+            $lockHelper->unlock(self::LOCK_CODE);
         }
 
         $this->clearOldOrderFlags();

@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Profileolabs_Shoppingflux>
-            <version>2.4.6</version>
+            <version>2.5.0</version>
         </Profileolabs_Shoppingflux>
     </modules>
     <global>
@@ -401,6 +401,7 @@
         <shoppingflux_mo>
             <manageorders>
                 <enabled>1</enabled>
+                <use_lock>0</use_lock>
                 <limit_orders>30</limit_orders>
                 <new_order_status>pending</new_order_status>
                 <create_invoice>1</create_invoice>

@@ -35,12 +35,18 @@ class Profileolabs_Shoppingflux_Adminhtml_Shoppingfeed_Order_ImportController ex
             $importer = Mage::getModel('profileolabs_shoppingflux/manageorders_order');
             $importer->manageOrders();
 
-            $this->_getSession()->addSuccess(
-                $helper->__(
-                    '%d orders have been imported',
-                    $importer->getImportedOrderCount()
-                )
-            );
+            $importedCount = $importer->getImportedOrderCount();
+
+            if (null === $importedCount) {
+                $this->_getSession()->addNotice($helper->__('An import is already running.'));
+            } else {
+                $this->_getSession()->addSuccess(
+                    $helper->__(
+                        '%d orders have been imported',
+                        (int) $importedCount
+                    )
+                );
+            }
 
             if (($result = $importer->getSentOrdersResult()) != '') {
                 $this->_getSession()->addSuccess($helper->__('Orders sent result : %s', $result));

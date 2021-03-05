@@ -357,6 +357,15 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
 
     /**
      * @param int|null $storeId
+     * @return bool
+     */
+    public function isOrderImportUsingLock($storeId = null)
+    {
+        return $this->getConfigFlag('shoppingflux_mo/manageorders/use_lock', $storeId);
+    }
+
+    /**
+     * @param int|null $storeId
      * @return int
      */
     public function getLimitOrders($storeId = null)
