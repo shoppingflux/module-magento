@@ -532,6 +532,15 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
 
     /**
      * @param array $sfOrder
+     * @return bool
+     */
+    protected function _hasSfOrderItemPricesMissingEcotax(array $sfOrder)
+    {
+        return strtolower($sfOrder['Marketplace']) === 'laredoute';
+    }
+
+    /**
+     * @param array $sfOrder
      * @param int $storeId
      */
     protected function _addProductsToQuote(array $sfOrder, $storeId)
@@ -595,7 +604,18 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
                 }
 
                 $this->_getQuote()->save();
-                $unitPrice = $sfProduct['Price'] / $qtyIncrements;
+
+                $itemPrice = $sfProduct['Price'];
+
+                if (
+                    isset($sfProduct['Ecotax'])
+                    && ($sfProduct['Ecotax'] > 0)
+                    && $this->_hasSfOrderItemPricesMissingEcotax($sfOrder)
+                ) {
+                    $itemPrice += $sfProduct['Ecotax'];
+                }
+
+                $unitPrice = $itemPrice / $qtyIncrements;
 
                 if ($unitPrice <= 0) {
                     $this->getHelper()
