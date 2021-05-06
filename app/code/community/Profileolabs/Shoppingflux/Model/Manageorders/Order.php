@@ -245,8 +245,6 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
         }
 
         foreach ($importableStoreIds as $storeId) {
-            $storeId = $_store->getId();
-
             if ($this->getConfig()->isOrdersEnabled($storeId)) {
                 $apiKey = $this->getConfig()->getApiKey($storeId);
 
