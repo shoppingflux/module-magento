@@ -198,7 +198,14 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
         }
 
         $select->where(
-            'cp_table.entity_id IS NULL or main_table.store_id NOT IN (' . $adapter->quote($existingStoreIds) . ')'
+            implode(
+                ' OR ',
+                array(
+                    'cp_table.entity_id IS NULL',
+                    'cp_table.sku != main_table.sku',
+                    'main_table.store_id NOT IN (' . $adapter->quote($existingStoreIds) . ')',
+                )
+            )
         );
 
         /** @var Mage_Core_Model_Resource_Iterator $iterator */
