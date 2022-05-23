@@ -5,7 +5,9 @@ if($_storeCode):
     $_store = Mage::app()->getStore($_storeCode);
     $_email = Mage::getStoreConfig('trans_email/ident_general/email', $_store->getId());
     $_feed = urlencode(Mage::helper('profileolabs_shoppingflux')->getFeedUrl($_store));
-    $_lang = mb_substr(Mage::getStoreConfig('general/locale/code', $_store->getId()), -2);
+    /** @var Mage_Core_Helper_String $_stringHelper */
+    $_stringHelper = Mage::helper('core/string');
+    $_lang = $_stringHelper->substr(Mage::getStoreConfig('general/locale/code', $_store->getId()), -2);
     $_token = Mage::getStoreConfig('shoppingflux/configuration/api_key', $_store->getId());
 ?>
 <div style="text-align:center;">
