@@ -394,7 +394,7 @@
             <configuration>
                 <is_sandbox>0</is_sandbox>
                 <ws_uri_test>http://test.shopping-flux.com/ws/</ws_uri_test>
-                 <ws_uri_prod>http://ws.shopping-flux.com</ws_uri_prod>
+                 <ws_uri_prod>https://ws.shopping-feed.com</ws_uri_prod>
                 <api_key></api_key>
             </configuration>
         </shoppingflux>
