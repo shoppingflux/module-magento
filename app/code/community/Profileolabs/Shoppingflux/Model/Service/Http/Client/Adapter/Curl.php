@@ -438,6 +438,9 @@ class Profileolabs_Shoppingflux_Model_Service_Http_Client_Adapter_Curl implement
             $this->_response = str_ireplace("Transfer-Encoding: chunked\r\n", '', $this->_response);
         }
 
+        // HTTP/2 responses are not supported by all versions of Zend_Http_Response
+        $this->_response = preg_replace('|^\s*HTTP/2 |', 'HTTP/1.1 ', $this->_response);
+
         // Eliminate multiple HTTP responses.
         do {
             $parts = preg_split('|(?:\r?\n){2}|m', $this->_response, 2);
