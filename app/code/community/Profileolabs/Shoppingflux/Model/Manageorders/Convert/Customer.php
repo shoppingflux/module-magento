@@ -2,6 +2,62 @@
 
 class Profileolabs_Shoppingflux_Model_Manageorders_Convert_Customer extends Varien_Object
 {
+    // See Mage_Directory setup.
+    const SPAIN_REGION_PREFIX_TO_CODE_MAPPING = [
+        '01' => 'Alava',
+        '02' => 'Albacete',
+        '03' => 'Alicante',
+        '04' => 'Almeria',
+        '05' => 'Avila',
+        '06' => 'Badajoz',
+        '07' => 'Baleares',
+        '08' => 'Barcelona',
+        '09' => 'Burgos',
+        '10' => 'Caceres',
+        '11' => 'Cadiz',
+        '12' => 'Castellon',
+        '13' => 'Ciudad Real',
+        '14' => 'Cordoba',
+        '15' => 'A Coruсa',
+        '16' => 'Cuenca',
+        '17' => 'Girona',
+        '18' => 'Granada',
+        '19' => 'Guadalajara',
+        '20' => 'Guipuzcoa',
+        '21' => 'Huelva',
+        '22' => 'Huesca',
+        '23' => 'Jaen',
+        '24' => 'Leon',
+        '25' => 'Lleida',
+        '26' => 'La Rioja',
+        '27' => 'Lugo',
+        '28' => 'Madrid',
+        '29' => 'Malaga',
+        '30' => 'Murcia',
+        '31' => 'Navarra',
+        '32' => 'Ourense',
+        '33' => 'Asturias',
+        '34' => 'Palencia',
+        '35' => 'Las Palmas',
+        '36' => 'Pontevedra',
+        '37' => 'Salamanca',
+        '38' => 'Santa Cruz de Tenerife',
+        '39' => 'Cantabria',
+        '40' => 'Segovia',
+        '41' => 'Sevilla',
+        '42' => 'Soria',
+        '43' => 'Tarragona',
+        '44' => 'Teruel',
+        '45' => 'Toledo',
+        '46' => 'Valencia',
+        '47' => 'Valladolid',
+        '48' => 'Vizcaya',
+        '49' => 'Zamora',
+        '50' => 'Zaragoza',
+        '51' => 'Ceuta',
+        '52' => 'Melilla',
+    ];
+
     /**
      * @param array $data
      * @param int $storeId
@@ -124,6 +180,14 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Convert_Customer extends Vari
                 $regionCode = null;
             } else {
                 $isAddressRegionCode = true;
+            }
+        } elseif ($countryId === 'ES') {
+            $regionCode = $stringHelper->substr($address->getPostcode(), 0, 2);
+
+            if (array_key_exists($regionCode, self::SPAIN_REGION_PREFIX_TO_CODE_MAPPING)) {
+                $regionCode = self::SPAIN_REGION_PREFIX_TO_CODE_MAPPING[$regionCode];
+            } else {
+                $regionCode = null;
             }
         }
 
