@@ -213,8 +213,12 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
      */
     public function scheduleShipmentUpdate($observer)
     {
-        if (($shipment = $observer->getEvent()->getData('shipment'))
+        $salesHelper = $this->getSalesHelper();
+
+        if (
+            ($shipment = $observer->getEvent()->getData('shipment'))
             && ($shipment instanceof Mage_Sales_Model_Order_Shipment)
+            && !$salesHelper->isFulfilmentMarketplace((string) $shipment->getOrder()->getMarketplaceShoppingflux())
         ) {
             /** @var Profileolabs_Shoppingflux_Model_Manageorders_Export_Shipments $exporter */
             $exporter = Mage::getModel('profileolabs_shoppingflux/manageorders_export_shipments');
