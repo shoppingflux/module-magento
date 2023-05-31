@@ -405,6 +405,7 @@
                 <limit_orders>30</limit_orders>
                 <new_order_status>pending</new_order_status>
                 <create_invoice>1</create_invoice>
+                <fulfilment_create_shipment>1</fulfilment_create_shipment>
                 <processing_order_status>processing</processing_order_status>
                 <apply_tax>0</apply_tax>
                 <use_product_id>0</use_product_id>
