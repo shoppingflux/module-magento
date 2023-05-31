@@ -871,7 +871,12 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
                 }
             }
 
-            if ($isFulfiledOrder) {
+            $shouldCreateShipment = $config->getConfigFlag(
+                'shoppingflux_mo/manageorders/fulfilment_create_shipment',
+                $order->getStoreId()
+            );
+
+            if ($isFulfiledOrder && $shouldCreateShipment) {
                 $this->_saveFulfilmentShipment($order);
 
                 $processingStatus = $config->getConfigData(

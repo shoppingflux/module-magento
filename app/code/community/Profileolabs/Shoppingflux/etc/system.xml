@@ -132,11 +132,22 @@
                             <show_in_website>0</show_in_website>
                              <show_in_store>1</show_in_store>
                         </processing_order_status>
+                        <fulfilment_create_shipment>
+                            <label>Create shipment for fulfilled orders ?</label>
+                            <comment>If yes, a shipment will be created on ShoppingFlux's fulfilled order creation</comment>
+                            <frontend_type>select</frontend_type>
+                            <sort_order>82</sort_order>
+                            <show_in_default>0</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                        </fulfilment_create_shipment>
                         <fulfilment_processing_order_status translate="label comment">
                             <label>Shipped order status</label>
                             <comment>Only concerns orders fulfiled by marketplaces</comment>
                             <depends>
                                 <create_invoice>0</create_invoice>
+                                <fulfilment_create_shipment>1</fulfilment_create_shipment>
                             </depends>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_order_status_processing</source_model>
@@ -150,6 +161,7 @@
                             <comment>Only concerns orders fulfiled by marketplaces</comment>
                             <depends>
                                 <create_invoice>1</create_invoice>
+                                <fulfilment_create_shipment>1</fulfilment_create_shipment>
                             </depends>
                             <frontend_type>select</frontend_type>
                             <source_model>profileolabs_shoppingflux/system_config_source_order_status_complete</source_model>
