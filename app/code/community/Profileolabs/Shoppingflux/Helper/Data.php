@@ -62,7 +62,7 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract
         return str_replace(
             array('+', '/', '='),
             '-',
-            $coreHelper->encrypt($this->getConfig()->getApiKey($storeId))
+            (string) $coreHelper->encrypt($this->getConfig()->getApiKey($storeId))
         );
     }
 
@@ -82,7 +82,7 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract
         return preg_replace(
             '%^(.*)\?.*$%i',
             '$1',
-            $store->getUrl('shoppingflux/export_flux/' . $action, $params)
+            (string) $store->getUrl('shoppingflux/export_flux/' . $action, $params)
         );
     }
 
@@ -101,7 +101,7 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract
     {
         /** @var Mage_Core_Model_Store $store */
         foreach (Mage::app()->getStores() as $store) {
-            $apiKey = Mage::getConfig()->getNode('stores/' . $store->getCode() . '/shoppingflux/configuration/api_key');
+            $apiKey = (string) Mage::getConfig()->getNode('stores/' . $store->getCode() . '/shoppingflux/configuration/api_key');
 
             if (!trim($apiKey)) {
                 $apiKey = Mage::getStoreConfig('shoppingflux/configuration/api_key', 0);
@@ -145,7 +145,7 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract
             '|[\xC2-\xDF]((?![\x80-\xBF])|[\x80-\xBF]{2,})' .
             '|[\xE0-\xEF](([\x80-\xBF](?![\x80-\xBF]))|(?![\x80-\xBF]{2})|[\x80-\xBF]{3,})/S',
             '',
-            $value
+            (string) $value
         );
 
         // Reject overly long 3 byte sequences and UTF-16 surrogates, and replace them with blanks.
@@ -178,7 +178,7 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public function truncateAddress($street, $lineMaxLength = 35, $additional = array())
     {
-        $street = trim($street);
+        $street = trim((string) $street);
 
         if (!$street) {
             return array();
@@ -193,7 +193,7 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract
             $line = $stringHelper->substr($street, 0, $lineMaxLength);
         }
 
-        $street = trim($stringHelper->substr($street, $stringHelper->strlen($line)));
+        $street = trim((string) $stringHelper->substr($street, $stringHelper->strlen($line)));
         return array_merge(array($line), $this->truncateAddress($street, $lineMaxLength), $additional);
     }
 
@@ -298,7 +298,7 @@ class Profileolabs_Shoppingflux_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public function getShippingPrice($product, $carrierValue, $countryCode = 'FR')
     {
-        list($carrierCode,) = explode('_', $carrierValue);
+        list($carrierCode,) = explode('_', (string) $carrierValue);
 
         /** @var Mage_Shipping_Model_Shipping $shipping */
         $shipping = Mage::getModel('shipping/shipping');

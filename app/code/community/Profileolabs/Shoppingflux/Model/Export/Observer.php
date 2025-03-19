@@ -217,7 +217,7 @@ class Profileolabs_Shoppingflux_Model_Export_Observer
         if (($product = $observer->getEvent()->getData('product'))
             && ($product instanceof Mage_Catalog_Model_Product)
         ) {
-            $sku = trim($product->getSku());
+            $sku = trim((string) $product->getSku());
 
             if ('' !== $sku) {
                 $fluxModel = $this->getFluxModel();

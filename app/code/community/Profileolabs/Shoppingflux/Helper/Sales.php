@@ -9,7 +9,7 @@ class Profileolabs_Shoppingflux_Helper_Sales extends Mage_Core_Helper_Abstract
     public function isFulfilmentMarketplace($marketplace)
     {
         return in_array(
-            strtolower($marketplace),
+            strtolower((string) $marketplace),
             array(
                 'amazon fba', // Amazon
                 'epmm', // Monechelle
@@ -45,6 +45,6 @@ class Profileolabs_Shoppingflux_Helper_Sales extends Mage_Core_Helper_Abstract
      */
     public function isGoogleShoppingActionsOrder(Mage_Sales_Model_Order $order)
     {
-        return trim($order->getData('marketplace_shoppingflux')) === 'googleshoppingaction';
+        return trim((string) $order->getData('marketplace_shoppingflux')) === 'googleshoppingaction';
     }
 }

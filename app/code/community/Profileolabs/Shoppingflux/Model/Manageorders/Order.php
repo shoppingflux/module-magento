@@ -534,7 +534,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
      */
     protected function _hasSfOrderItemPricesMissingEcotax(array $sfOrder)
     {
-        return strtolower($sfOrder['Marketplace']) === 'laredoute';
+        return strtolower((string) $sfOrder['Marketplace']) === 'laredoute';
     }
 
     /**
@@ -572,7 +572,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Order extends Varien_Object
             if ($useProductId) {
                 $productId = null;
 
-                if (!ctype_digit(trim($sku))) {
+                if (!ctype_digit(trim((string) $sku))) {
                     $productId = $this->getProductModel()->getResource()->getIdBySku($sku);
                 }
 

@@ -71,7 +71,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
          * There is no way to work around this behavior, so we just instead replace question marks with wildcards,
          * and defer finding the right item to later.
          */
-        $searchableSku = str_replace('\\', '\\\\', $productSku);
+        $searchableSku = str_replace('\\', '\\\\', (string) $productSku);
         $searchableSku = str_replace(array('_', '%'), array('\_', '\%'), $searchableSku);
         $searchableSku = str_replace('?', '_', $searchableSku);
 
@@ -345,7 +345,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
         $product = $this->_getProduct($productId, $storeId);
 
         if ($product && $product->getId()) {
-            $sku = trim($product->getSku());
+            $sku = trim((string) $product->getSku());
             $fluxEntry = $this->getEntry($sku, $storeId);
 
             if (!$fluxEntry->getId() && ('' === $sku)) {
@@ -526,7 +526,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
             $data = implode(',', $data);
         }
 
-        return trim($data);
+        return trim((string) $data);
     }
 
     protected function _checkMemory()
@@ -901,11 +901,11 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
      */
     protected function _getCategoriesData(array $data, array $categories, $categoryId, $maxLevel = 5)
     {
-        $names = explode(' > ', $categories['name'][$categoryId]);
-        $metaTitles = explode(' > ', $categories['meta_title'][$categoryId]);
-        $metaDescriptions = explode(' > ', $categories['meta_description'][$categoryId]);
-        $metaKeywords = explode(' > ', $categories['meta_keywords'][$categoryId]);
-        $urls = explode(' > ', $categories['url'][$categoryId]);
+        $names = explode(' > ', (string) $categories['name'][$categoryId]);
+        $metaTitles = explode(' > ', (string) $categories['meta_title'][$categoryId]);
+        $metaDescriptions = explode(' > ', (string) $categories['meta_description'][$categoryId]);
+        $metaKeywords = explode(' > ', (string) $categories['meta_keywords'][$categoryId]);
+        $urls = explode(' > ', (string) $categories['url'][$categoryId]);
 
         // Drop the root category (useless here)
         array_shift($names);
@@ -982,7 +982,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
 
             foreach ($categoryIds as $categoryId) {
                 if (isset($categories['name'][$categoryId])) {
-                    $categoryNames = explode(' > ', $categories['name'][$categoryId]);
+                    $categoryNames = explode(' > ', (string) $categories['name'][$categoryId]);
                     $categoryLevel = count($categoryNames);
 
                     if ($categoryLevel > $chosenCategoryLevel) {
@@ -1019,7 +1019,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
      */
     public function cleanUrl($url)
     {
-        return preg_replace('%(.*)\?.*$%i', '$1', str_replace('index.php/', '', $url));
+        return preg_replace('%(.*)\?.*$%i', '$1', str_replace('index.php/', '', (string) $url));
     }
 
     /**
@@ -1128,7 +1128,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
             return $data;
         }
 
-        $carrierData = explode('_', $carrier);
+        $carrierData = explode('_', (string) $carrier);
         list(, $methodCode) = $carrierData;
         $data['shipping-name'] = ucfirst($methodCode);
         $shippingPrice = 0;
@@ -1162,7 +1162,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
                 $additionalAttributes = $this->getConfig()->getAdditionalAttributes($storeId);
 
                 foreach ($additionalAttributes as $attributeCode) {
-                    $attributes[$attributeCode] = trim($attributeCode);
+                    $attributes[$attributeCode] = trim((string) $attributeCode);
                 }
             }
 
@@ -1193,7 +1193,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
      */
     protected function _getConfigurableAttributes(array $data, $product, $storeId)
     {
-        $data['configurable_attributes'] = '';
+        $data['configurable_attributes'] = [];
         $data['childs_product'] = '';
         $images = array();
         $helper = $this->getHelper();
@@ -1343,7 +1343,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
                 }
 
                 foreach ($images as $key => $value) {
-                    $usedProductsArray[$usedProductId]['child'][$key] = trim($value);
+                    $usedProductsArray[$usedProductId]['child'][$key] = trim((string) $value);
                 }
 
                 foreach ($attributesFromConfig as $dataKey => $attributeCode) {
@@ -1379,7 +1379,7 @@ class Profileolabs_Shoppingflux_Model_Export_Flux extends Mage_Core_Model_Abstra
                         $attributesToOptions[$attributeCode][] = $value;
                     }
 
-                    $usedProductsArray[$usedProductId]['child'][$attributeCode] = trim($value);
+                    $usedProductsArray[$usedProductId]['child'][$attributeCode] = trim((string) $value);
                 }
 
 

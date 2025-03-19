@@ -42,7 +42,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
      */
     public function getApiKey($storeId = null)
     {
-        return trim($this->getConfigData('shoppingflux/configuration/api_key', $storeId));
+        return trim((string) $this->getConfigData('shoppingflux/configuration/api_key', $storeId));
     }
 
     /**
@@ -51,7 +51,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
      */
     public function getIdClient($storeId = null)
     {
-        return trim($this->getConfigData('shoppingflux/configuration/login', $storeId));
+        return trim((string) $this->getConfigData('shoppingflux/configuration/login', $storeId));
     }
 
     /**
@@ -60,7 +60,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
      */
     public function getIdTracking($storeId = null)
     {
-        return trim($this->getConfigData('shoppingflux/configuration/id_tracking', $storeId));
+        return trim((string) $this->getConfigData('shoppingflux/configuration/id_tracking', $storeId));
     }
 
     /**
@@ -77,8 +77,8 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
     public function getWsUri()
     {
         return $this->isSandbox()
-            ? trim($this->getConfigData('shoppingflux/configuration/ws_uri_sandbox'))
-            : trim($this->getConfigData('shoppingflux/configuration/ws_uri_prod'));
+            ? trim((string) $this->getConfigData('shoppingflux/configuration/ws_uri_sandbox'))
+            : trim((string) $this->getConfigData('shoppingflux/configuration/ws_uri_prod'));
     }
 
     /**
@@ -137,7 +137,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
         if (!$this->isExportSoldout($storeId) && !$this->isExportNotSalable($storeId)) {
             if ($this->getConfigFlag('shoppingflux_export/general/enable_not_salable_retention', $storeId)) {
                 $hours = $this->getConfigData('shoppingflux_export/general/not_salable_retention_duration', $storeId);
-                $seconds = max(0, min((int) trim($hours), 168)) * 3600;
+                $seconds = max(0, min((int) trim((string) $hours), 168)) * 3600;
             }
         }
 
@@ -162,7 +162,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
         return array_filter(
             array_map(
                 'intval',
-                explode(',', $this->getConfigData('shoppingflux_export/general/export_visibility', $storeId))
+                explode(',', (string) $this->getConfigData('shoppingflux_export/general/export_visibility', $storeId))
             )
         );
     }
@@ -297,7 +297,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
     public function getAdditionalAttributes($storeId = null)
     {
         $additional = $this->getConfigData('shoppingflux_export/attributes_mapping/additional', $storeId);
-        $additional = array_filter(explode(',', $additional));
+        $additional = array_filter(explode(',', (string) $additional));
         $additional = array_diff($additional, $this->getMappingAttributes($storeId));
         return $additional;
     }
@@ -392,7 +392,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
     public function getCustomerGroupIdFor($marketplace = false, $storeId = null)
     {
         if ($marketplace) {
-            $marketplace = strtolower($marketplace);
+            $marketplace = strtolower((string) $marketplace);
             $groupId = $this->getConfigData('shoppingflux_mo/import_customer/' . $marketplace . '_group', $storeId);
 
             if ($groupId) {
@@ -410,7 +410,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
      */
     protected function _getDefaultShippingMethod($storeId = null)
     {
-        return trim(Mage::getStoreConfig('shoppingflux_mo/shipping_method/default_method', $storeId));
+        return trim((string) Mage::getStoreConfig('shoppingflux_mo/shipping_method/default_method', $storeId));
     }
 
     /**
@@ -420,7 +420,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
      */
     protected function _getMarketplaceShippingMethod($marketplace, $storeId = null)
     {
-        return trim(Mage::getStoreConfig('shoppingflux_mo/shipping_method/' . $marketplace . '_method', $storeId));
+        return trim((string) Mage::getStoreConfig('shoppingflux_mo/shipping_method/' . $marketplace . '_method', $storeId));
     }
 
     /**
@@ -430,7 +430,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
      */
     protected function _getSfShippingMethod($code, $storeId = null)
     {
-        return trim(Mage::getStoreConfig('shoppingflux_mo/advanced_shipping_method/' . $code, $storeId));
+        return trim((string) Mage::getStoreConfig('shoppingflux_mo/advanced_shipping_method/' . $code, $storeId));
     }
 
     /**
@@ -447,7 +447,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
             return $defaultMethod;
         }
 
-        $marketplace = strtolower($marketplace);
+        $marketplace = strtolower((string) $marketplace);
         $marketplaceMethod = $this->_getMarketplaceShippingMethod($marketplace, $storeId);
 
         if (!$sfShippingMethod) {
@@ -457,7 +457,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
         /** @var Profileolabs_Shoppingflux_Model_Manageorders_Shipping_Method $shippingMethodModel */
         $shippingMethodModel = Mage::getModel('profileolabs_shoppingflux/manageorders_shipping_method');
         $sfMethodCode = $shippingMethodModel->getFullShippingMethodCodeFor($marketplace, $sfShippingMethod);
-        $sfMethodCode = preg_replace('%[^a-zA-Z0-9_]%', '', $sfMethodCode);
+        $sfMethodCode = preg_replace('%[^a-zA-Z0-9_]%', '', (string) $sfMethodCode);
         $sfMethod = $this->_getSfShippingMethod($sfMethodCode, $storeId);
 
         return ($sfMethod ? $sfMethod : ($marketplaceMethod ? $marketplaceMethod : $defaultMethod));
@@ -527,7 +527,7 @@ class Profileolabs_Shoppingflux_Model_Config extends Varien_Object
 
             foreach ($trackableCarrierHash as $mageCarrierCode => $title) {
                 $gsaCarrierCode = trim(
-                    $this->getConfigData('shoppingflux_mo/gsa_carrier_mapping/' . $mageCarrierCode, $storeId)
+                    (string) $this->getConfigData('shoppingflux_mo/gsa_carrier_mapping/' . $mageCarrierCode, $storeId)
                 );
 
                 if ('' !== $gsaCarrierCode) {

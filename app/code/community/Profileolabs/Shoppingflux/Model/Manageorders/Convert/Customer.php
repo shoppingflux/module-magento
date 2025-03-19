@@ -92,7 +92,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Convert_Customer extends Vari
         $coreHelper = Mage::helper('core');
         $coreHelper->copyFieldset('shoppingflux_convert_customer', 'to_customer', $data, $customer);
 
-        if (trim($customer->getFirstname()) === '') {
+        if (trim((string) $customer->getFirstname()) === '') {
             $customer->setFirstname('__');
         }
 
@@ -133,22 +133,22 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Convert_Customer extends Vari
 
         $coreHelper->copyFieldset('shoppingflux_convert_customer', 'to_customer_address', $data, $address);
 
-        if (trim($address->getFirstname()) === '') {
+        if (trim((string) $address->getFirstname()) === '') {
             $address->setFirstname(' __ ');
         }
 
-        if (strpos(strtolower($address->getCountryId()), 'france') !== false) {
+        if (strpos(strtolower((string) $address->getCountryId()), 'france') !== false) {
             $address->setCountryId('FR');
         }
 
-        if ((trim($address->getTelephone()) === '') && $data['PhoneMobile']) {
+        if ((trim((string) $address->getTelephone()) === '') && $data['PhoneMobile']) {
             $address->setTelephone($data['PhoneMobile']);
         }
 
         /** @var Profileolabs_Shoppingflux_Model_Config $config */
         $config = Mage::getSingleton('profileolabs_shoppingflux/config');
 
-        if ($data['PhoneMobile'] && $stringHelper->strlen(trim($data['PhoneMobile'])) >= 9) {
+        if ($data['PhoneMobile'] && $stringHelper->strlen(trim((string) $data['PhoneMobile'])) >= 9) {
             if ($mobilePhoneAttribute = $config->getMobilePhoneAttribute($storeId)) {
                 $customer->setData($mobilePhoneAttribute, $data['PhoneMobile']);
             } elseif ($config->preferMobilePhone($storeId)) {
@@ -159,7 +159,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Convert_Customer extends Vari
         $regionId = false;
         $regionCode = false;
         $isAddressRegionCode = false;
-        $countryId = strtoupper($address->getCountryId());
+        $countryId = strtoupper((string) $address->getCountryId());
 
         if ($countryId === 'FR') {
             $postcode = str_pad($address->getPostcode(), 5, '0', STR_PAD_LEFT);
@@ -174,7 +174,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Convert_Customer extends Vari
                 }
             }
         } elseif (in_array($countryId, array('CA', 'US'), true)) {
-            $regionCode = trim($data['Street2']);
+            $regionCode = trim((string) $data['Street2']);
 
             if (!preg_match('/^[a-z]{2}$/i', $regionCode)) {
                 $regionCode = null;

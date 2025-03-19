@@ -63,7 +63,7 @@ abstract class Profileolabs_Shoppingflux_Block_Adminhtml_System_Config_Form_Fiel
      */
     protected function _beautifyMarketplaceName($name)
     {
-        return ucwords(str_replace('_', ' ', $name));
+        return ucwords(str_replace('_', ' ', (string) $name));
     }
 
     /**
@@ -73,7 +73,7 @@ abstract class Profileolabs_Shoppingflux_Block_Adminhtml_System_Config_Form_Fiel
      */
     protected function _addMarketplaceField(Varien_Data_Form_Element_Abstract $fieldset, $marketplace, $sortOrder)
     {
-        $fieldKey = strtolower(preg_replace('%[^a-zA-Z0-9_]%', '', $marketplace)) . '_' . $this->_getFieldSuffix();
+        $fieldKey = strtolower(preg_replace('%[^a-zA-Z0-9_]%', '', (string) $marketplace)) . '_' . $this->_getFieldSuffix();
         $configPath = $this->_getConfigSectionKey() . '/' . $this->_getConfigGroupKey() . '/' . $fieldKey;
         $configData = $this->getConfigData();
         $fieldValue = '';

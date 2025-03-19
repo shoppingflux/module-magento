@@ -98,7 +98,7 @@ class Profileolabs_Shoppingflux_Block_Export_Adminhtml_Product_Grid extends Mage
     protected function _afterLoadCollection()
     {
         foreach ($this->getCollection() as $item) {
-            $item->setCategories(explode(',', $item->getCategories()));
+            $item->setCategories(explode(',', (string) $item->getCategories()));
         }
     }
 

@@ -95,7 +95,7 @@ class Profileolabs_Shoppingflux_Export_FluxController extends Mage_Core_Controll
         $productSku = $this->getRequest()->getParam('product_sku');
         $forceMultiStore = $this->getRequest()->getParam('force_multi_stores', false);
         $forceStore = $this->getRequest()->getParam('force_store', false);
-        $key = trim($this->getRequest()->getParam('key', ''));
+        $key = trim((string) $this->getRequest()->getParam('key', ''));
 
         if ($forceStore) {
             /** @var Mage_Core_Model_App_Emulation $appEmulation */

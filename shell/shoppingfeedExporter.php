@@ -44,7 +44,7 @@ class Profileolabs_Shoppingflux_Shell_Feed_Exporter extends Mage_Shell_Abstract
         // which could otherwise get initialized after output is started.
         Mage::getSingleton('customer/session');
 
-        $feedFileDir = ltrim(trim($this->getArg('file-dir')), DS . '/');
+        $feedFileDir = ltrim(trim((string) $this->getArg('file-dir')), DS . '/');
 
         if (empty($feedFileDir)) {
             $feedFileDir = 'media';
@@ -69,7 +69,7 @@ class Profileolabs_Shoppingflux_Shell_Feed_Exporter extends Mage_Shell_Abstract
             return;
         }
 
-        $feedFileName = trim($this->getArg('file-name'));
+        $feedFileName = trim((string) $this->getArg('file-name'));
 
         if (empty($feedFileName)) {
             $feedFileName = 'feed_' . $storeId . '.xml';

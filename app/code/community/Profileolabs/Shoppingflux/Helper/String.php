@@ -41,7 +41,7 @@ class Profileolabs_Shoppingflux_Helper_String extends Mage_Core_Helper_String
         } else {
             $result = array();
             $argSeparator = '&';
-            $partsQueryStr = explode($argSeparator, $str);
+            $partsQueryStr = explode($argSeparator, (string) $str);
 
             foreach ($partsQueryStr as $partQueryStr) {
                 if ($this->_validateQueryStr($partQueryStr)) {
@@ -63,7 +63,7 @@ class Profileolabs_Shoppingflux_Helper_String extends Mage_Core_Helper_String
      */
     protected function _validateQueryStr($str)
     {
-        if (!$str || (strpos($str, '=') === false)) {
+        if (!$str || (strpos((string) $str, '=') === false)) {
             return false;
         }
 
@@ -79,7 +79,7 @@ class Profileolabs_Shoppingflux_Helper_String extends Mage_Core_Helper_String
     protected function _explodeAndDecodeParam($str)
     {
         $preparedParam = array();
-        $param = explode('=', $str);
+        $param = explode('=', (string) $str);
         $preparedParam['key'] = urldecode(array_shift($param));
         $preparedParam['value'] = urldecode(array_shift($param));
         return $preparedParam;
@@ -191,14 +191,14 @@ class Profileolabs_Shoppingflux_Helper_String extends Mage_Core_Helper_String
         $leftBracketSymbol = '[';
         $rightBracketSymbol = ']';
 
-        $firstPos = strrpos($key, $leftBracketSymbol);
-        $lastPos = strrpos($key, $rightBracketSymbol);
+        $firstPos = strrpos((string) $key, $leftBracketSymbol);
+        $lastPos = strrpos((string) $key, $rightBracketSymbol);
 
         if (($firstPos !== false || $lastPos !== false)
             && ($firstPos < $lastPos)
         ) {
             $keyLength = $lastPos - $firstPos + 1;
-            $subKey = substr($key, $firstPos, $keyLength);
+            $subKey = substr((string) $key, $firstPos, $keyLength);
 
             if (!$withBrackets) {
                 $subKey = ltrim($subKey, $leftBracketSymbol);

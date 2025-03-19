@@ -47,7 +47,7 @@ class Profileolabs_Shoppingflux_Block_Manageorders_Adminhtml_System_Config_Form_
         /** @var Profileolabs_Shoppingflux_Helper_Data $helper */
         $helper = Mage::helper('profileolabs_shoppingflux');
 
-        $shippingMethod = preg_replace('%[^a-zA-Z0-9_]%', '', $shippingMethod);
+        $shippingMethod = preg_replace('%[^a-zA-Z0-9_]%', '', (string) $shippingMethod);
         $configPath = 'shoppingflux_mo/advanced_shipping_method/' . $shippingMethod;
         $configData = $this->getConfigData();
         $fieldValue = '';

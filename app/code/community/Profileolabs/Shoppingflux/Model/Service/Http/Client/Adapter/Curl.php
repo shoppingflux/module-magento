@@ -149,7 +149,7 @@ class Profileolabs_Shoppingflux_Model_Service_Http_Client_Adapter_Curl implement
         }
 
         foreach ($config as $k => $v) {
-            $option = strtolower($k);
+            $option = strtolower((string) $k);
             switch ($option) {
                 case 'proxy_host':
                     $this->setCurlOption(CURLOPT_PROXY, $v);
@@ -434,12 +434,12 @@ class Profileolabs_Shoppingflux_Model_Service_Http_Client_Adapter_Curl implement
         }
 
         // cURL automatically decodes chunked-messages, this means we have to disallow the Zend_Http_Response to do it again
-        if (stripos($this->_response, "Transfer-Encoding: chunked\r\n") !== false) {
-            $this->_response = str_ireplace("Transfer-Encoding: chunked\r\n", '', $this->_response);
+        if (stripos((string) $this->_response, "Transfer-Encoding: chunked\r\n") !== false) {
+            $this->_response = str_ireplace("Transfer-Encoding: chunked\r\n", '', (string) $this->_response);
         }
 
         // HTTP/2 responses are not supported by all versions of Zend_Http_Response
-        $this->_response = preg_replace('|^\s*HTTP/2 |', 'HTTP/1.1 ', $this->_response);
+        $this->_response = preg_replace('|^\s*HTTP/2 |', 'HTTP/1.1 ', (string) $this->_response);
 
         // Eliminate multiple HTTP responses.
         do {
@@ -453,7 +453,7 @@ class Profileolabs_Shoppingflux_Model_Service_Http_Client_Adapter_Curl implement
         } while ($again);
 
         // cURL automatically handles Proxy rewrites, remove the "HTTP/1.0 200 Connection established" string:
-        if (stripos($this->_response, "HTTP/1.0 200 Connection established\r\n\r\n") !== false) {
+        if (stripos((string) $this->_response, "HTTP/1.0 200 Connection established\r\n\r\n") !== false) {
             $this->_response = str_ireplace("HTTP/1.0 200 Connection established\r\n\r\n", '', $this->_response);
         }
 
@@ -516,6 +516,6 @@ class Profileolabs_Shoppingflux_Model_Service_Http_Client_Adapter_Curl implement
     public function readHeader($curl, $header)
     {
         $this->_response .= $header;
-        return strlen($header);
+        return strlen((string) $header);
     }
 }

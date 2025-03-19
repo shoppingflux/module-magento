@@ -61,7 +61,7 @@ class Varien_Data_Form_Element_Wcmultiselect extends Varien_Data_Form_Element_Ab
     public function getName()
     {
         $name = parent::getName();
-        if (strpos($name, '[]') === false) {
+        if (strpos((string) $name, '[]') === false) {
             $name.= '[]';
         }
         return $name;
@@ -84,7 +84,7 @@ class Varien_Data_Form_Element_Wcmultiselect extends Varien_Data_Form_Element_Ab
         
         $value = $this->getValue();
         if (!is_array($value)) {
-            $value = explode(',', $value);
+            $value = explode(',', (string) $value);
         }
         $value = array_unique($value);
         $value = array_filter($value);

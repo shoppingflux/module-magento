@@ -96,7 +96,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
                 $trackingUrl = call_user_func(array($this, $this->_trackingUrlCallbacks[$matches[1]]), $trackingInfo);
             }
         } else {
-            $trackingNumber = urlencode(trim($trackingNumber));
+            $trackingNumber = urlencode(trim((string) $trackingNumber));
 
             if ('colissimoflexibilite' === $carrierCode) {
                 $trackingUrl = 'https://www.laposte.fr/outils/suivre-vos-envois?code=' . $trackingNumber;
@@ -129,8 +129,8 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
 
         /** @var Mage_Sales_Model_Order_Shipment_Track $track */
         foreach ($tracks as $track) {
-            if ('' !== trim($track->getData('number'))) {
-                $carrierCode = trim($track->getCarrierCode());
+            if ('' !== trim((string) $track->getData('number'))) {
+                $carrierCode = trim((string) $track->getCarrierCode());
                 $trackTitle = $track->getData('title');
 
                 if (('custom' !== $carrierCode)
@@ -166,8 +166,8 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
         return is_array($trackingData)
             && isset($trackingData['trackId'])
             && isset($trackingData['trackTitle'])
-            && ('' !== trim($trackingData['trackId']))
-            && ('' !== trim($trackingData['trackTitle']));
+            && ('' !== trim((string) $trackingData['trackId']))
+            && ('' !== trim((string) $trackingData['trackTitle']));
     }
 
     /**
@@ -442,7 +442,7 @@ class Profileolabs_Shoppingflux_Model_Manageorders_Observer
         $apiKeys = array();
 
         foreach (Mage::app()->getStores() as $store) {
-            if ($apiKey = trim($this->getConfig()->getApiKey($store->getId()))) {
+            if ($apiKey = trim((string) $this->getConfig()->getApiKey($store->getId()))) {
                 $apiKeys[] = $apiKey;
             }
         }
